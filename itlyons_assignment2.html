@@ -458,9 +458,17 @@ colnames(outlays)[2] &lt;- 'agency_name'</code></pre>
 or
 
 ggplot(filter(outlays_2018, dollars_thousands &gt; 2000 | dollars_thousands &lt; -2000), aes(x=agency_name, y=dollars_thousands)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1))</code></pre>
+<p><br><br><br><br></p>
 </div>
-<div id="plot-3" class="section level2">
-<h2>Plot 3</h2>
+</div>
+<div id="plot-3-federal-government-outlays-by-agency-by-year" class="section level1">
+<h1>Plot 3: Federal Government Outlays by Agency By Year</h1>
+<div id="i-take-the-federal-government-outlays-dataset-and-choose-the-top-8-departments-by-total-amount-spent-over-the-last-9-years." class="section level3">
+<h3>I take the federal government outlays dataset and choose the top 8 departments by total amount spent over the last 9 years.</h3>
+<ul>
+<li>Limit the years to just the last 9 so that the point plot is comprehensible.</li>
+<li>Group by agency name and fiscal year.</li>
+</ul>
 <pre><code>outlays %&gt;%
   filter(agency_name %in% c(&quot;Social Security Administration&quot;,&quot;Department of Health and Human Services&quot;,&quot;Department of Defense--Military Programs&quot;
     ,&quot;Department of the Treasury&quot;,&quot;Department of Agriculture&quot;, &quot;Department of Veterans Affairs&quot;, &quot;Department of Labor&quot;, &quot;Office of Personnel Management&quot;)) %&gt;% 
@@ -468,13 +476,20 @@ ggplot(filter(outlays_2018, dollars_thousands &gt; 2000 | dollars_thousands &lt;
   group_by(agency_name, fiscal_year) %&gt;%
   summarize(dollars_thousands = sum(dollars_thousands)) %&gt;%
       ggplot(aes(x = fiscal_year, y = dollars_thousands, color = agency_name, group=agency_name)) +
-      geom_point() + geom_line() +
-      scale_y_continuous( labels = scales::dollar) +
+      geom_point() + geom_line() + ggpubr::rotate_x_text() +
+      scale_y_continuous(name = &quot;Outlays (Thousands of US Dollars)&quot;, labels = scales::dollar) +
         labs(title = &quot;Federal Government Outlays By Agency By Year (Top 8 Agencies By Outlays)&quot;,
-        subtitle = &quot;&quot;,
-        caption = &quot;caption&quot;,
+        subtitle = &quot;The Department of Health and Human Services and the Social Security Administration Had the Largest Outlays&quot;,
+        caption = &quot;Source: United States. Office of Management and Budget. Public Budget Database.&quot;,
         x = &quot;Year&quot;,
-        y = &quot;Outlays (US Dollars)&quot;)</code></pre>
+        y = &quot;Outlays (Thousands of US Dollars)&quot; +              
+            theme(plot.title = element_text(color=&quot;black&quot;, size=14, face=&quot;bold&quot;, hjust = 0.5),
+                   plot.subtitle = element_text(color=&quot;black&quot;, size=12, hjust =0.5),
+                   axis.title.x = element_text(color=&quot;black&quot;, size=14, angle = 90),
+                   axis.title.y = element_text(color=&quot;black&quot;, size=14),
+                   plot.caption = element_text(color=&quot;black&quot;, size=8, face=&quot;italic&quot;)
+                   )
+        )</code></pre>
 </div>
 </div>
 
