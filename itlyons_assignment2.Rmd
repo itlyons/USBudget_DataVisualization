@@ -117,4 +117,29 @@ colnames(outlays)[2] <- 'agency_name'
 
 ```{}
 ggplot(outlays, aes(x=fiscal_year, y=0)) + geom_point()
+
+or
+
+ggplot(filter(outlays_2018, dollars_thousands > 2000 | dollars_thousands < -2000), aes(x=agency_name, y=dollars_thousands)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+
+
+## Plot 3
+```{}
+outlays %>%
+  filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services","Department of Defense--Military Programs"
+	,"Department of the Treasury","Department of Agriculture", "Department of Veterans Affairs", "Department of Labor", "Office of Personnel Management")) %>% 
+	filter(fiscal_year %in% c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018)) %>%
+  group_by(agency_name, fiscal_year) %>%
+  summarize(dollars_thousands = sum(dollars_thousands)) %>%
+      ggplot(aes(x = fiscal_year, y = dollars_thousands, color = agency_name, group=agency_name)) +
+      geom_point() + geom_line() +
+      scale_y_continuous( labels = scales::dollar) +
+        labs(title = "Federal Government Outlays By Agency By Year (Top 8 Agencies By Outlays)",
+        subtitle = "",
+        caption = "caption",
+        x = "Year",
+        y = "Outlays (US Dollars)")
+```
+
+
