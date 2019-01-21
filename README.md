@@ -9,5 +9,5 @@ I am interested in explaining the following topics:
 * Visualize in what departments and/or programs most federal money is spent.
 
 Sources:
-* United Sstates Treasury Department
+* United States Treasury Department
 * White House Office of Management and Budget
