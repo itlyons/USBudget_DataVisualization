@@ -376,60 +376,66 @@ $(document).ready(function () {
 </div>
 
 
-<div id="read-in-tax-expenditure-data-for-plot-1" class="section level1">
-<h1>Read in tax expenditure data for Plot 1</h1>
-<p>Source for tax expenditures on the Treasury Department Website: <a href="https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures" class="uri">https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures</a></p>
+<div id="read-in-tax-expenditure-and-federal-outlays-data" class="section level2">
+<h2>Read in Tax Expenditure and Federal Outlays Data</h2>
+<ul>
+<li><p>Source for tax expenditures on the Treasury Department Website: <a href="https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures" class="uri">https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures</a></p></li>
+<li>Source for federal outlays on the Office of Management and Budget website: <a href="https://www.whitehouse.gov/omb/supplemental-materials/" class="uri">https://www.whitehouse.gov/omb/supplemental-materials/</a></li>
+</ul>
 <pre><code>base_df &lt;- read_csv(file = 'tax_expenditures_18to28_renamed.csv')
 
 budg_2019 &lt;- read_csv(file = 'outlays-fy2019.csv')</code></pre>
-<div id="reshape-data-for-plot-1" class="section level2">
-<h2>Reshape Data For Plot 1</h2>
-<p>Create a long-form version of the tax expenditures dataset to use in a time-series plot. That is, create one row for each category, detail, and fiscal year. Then drop the cumulative ‘FY2019_to_2028’ column since I won’t be using it.</p>
+</div>
+<div id="reshape-tax-expenditure-dataframe-for-plot-1" class="section level2">
+<h2>Reshape Tax Expenditure Dataframe For Plot 1</h2>
+<ul>
+<li>Create a long-form version of the tax expenditures dataset to use in a time-series plot. That is, create one row for each category, detail, and fiscal year.</li>
+<li>Drop the cumulative ‘FY2019_to_2028’ column since I won’t be using it.</li>
+</ul>
 <pre><code>tax_long &lt;- gather(base_df, fiscal_year, expenditure, '2018':'2028', factor_key=TRUE)
 tax_long$FY2019_to_2028 &lt;- NULL</code></pre>
 </div>
-<div id="plot-1" class="section level2">
-<h2>Plot 1</h2>
-<pre><code>## Create a time-series dataset so that tax expenditures can be compared over the fiscal years included.  
+<div id="plot-1-projected-tax-expenditures-by-policy-category" class="section level2">
+<h2>Plot 1: Projected Tax Expenditures By Policy Category</h2>
+<ul>
+<li>Create a time-series dataset so that tax expenditures can be compared over the fiscal years included.</li>
+<li>Convert the expenditure column to be in billions of dollars by dividing by 1000 (the tax expenditures dataset is in millions of dollars by default).</li>
+</ul>
+<pre><code>time_series &lt;- tax_long %&gt;% select(fiscal_year, Category, expenditure) %&gt;%
+                  group_by(fiscal_year, Category) %&gt;%
+                  tally(expenditure)
 
-time_series &lt;- tax_long %&gt;% select(fiscal_year, Category, expenditure) %&gt;%
-     group_by(fiscal_year, Category) %&gt;%
-     tally(expenditure)
-
-## Convert the expenditure column to be in billions of dollars
 time_series &lt;- mutate(.data = time_series, amount_billions = n/1000)
 time_series$n &lt;- NULL
-bar_to_plot &lt;- ggplot(data=time_series, aes(x=fiscal_year, y=amount_billions, color=Category)) + geom_col()
+
+bar_to_plot &lt;- ggplot(data=time_series, aes(x=fiscal_year, y=amount_billions, color=Category, fill=Category)) + geom_col()
 
 plot1 &lt;- bar_to_plot + 
-    scale_y_continuous(name = &quot;Tax Expenditures in Billions of Nominal Dollars&quot;, labels =c('$0', '$433', '$866', '$1,300', '$1,733', '$2,166', '$2,600') 
-                       , breaks=c(0, 433, 866, 1300, 1733, 2166, 2600), limits = c(0,2600)) + 
-    
+    scale_y_continuous(name = &quot;Tax Expenditures in Billions of Nominal Dollars&quot;, 
+         labels =c('$0', '$433', '$866', '$1,300', '$1,733', '$2,166', '$2,600') 
+         , breaks=c(0, 433, 866, 1300, 1733, 2166, 2600), limits = c(0,2600)) + 
     scale_x_discrete(name='Fiscal Year') + 
     
     labs(title = &quot;US Federal Government Tax Expenditures, 2018-2028&quot;, 
          subtitle = &quot;The United States spends trillions of dollars on tax loopholes each year&quot;,
-         caption = &quot;Source: United States. Department of Treasury. Tax Policy: Tax Expenditures \n 
+         caption = &quot;Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n 
          * These estimates are made relative to current law as of July 1, 2018&quot;, 
          x = &quot;Fiscal Year&quot; + 
              
-             theme(plot.title = element_text(color=&quot;black&quot;, size=14, face=&quot;bold&quot;, hjust = 0.5),
-                   plot.subtitle = element_text(color=&quot;black&quot;, size=12, hjust =0.5),
-                   axis.title.x = element_text(color=&quot;black&quot;, size=10),
-                   axis.title.y = element_text(color=&quot;black&quot;, size=10),
-                   plot.caption = element_text(color=&quot;black&quot;, size=8, face=&quot;italic&quot;)
-                   )
+        theme(plot.title = element_text(color=&quot;black&quot;, size=14, face=&quot;bold&quot;, hjust = 0.5),
+          plot.subtitle = element_text(color=&quot;black&quot;, size=12, hjust =0.5),
+          axis.title.x = element_text(color=&quot;black&quot;, size=12),
+          axis.title.y = element_text(color=&quot;black&quot;, size=12),
+          plot.caption = element_text(color=&quot;black&quot;, size=8, face=&quot;italic&quot;)
+          )
     )</code></pre>
 <p><br><br><br><br></p>
 </div>
-</div>
-<div id="plot-2-read-in-federal-budget-outlays-data" class="section level1">
-<h1>Plot 2: Read in Federal Budget Outlays data</h1>
-<p>Source for federal outlays on the Office of Management and Budget website: * <a href="https://www.whitehouse.gov/omb/supplemental-materials/" class="uri">https://www.whitehouse.gov/omb/supplemental-materials/</a></p>
-<pre><code>budg_2019 &lt;- read_csv(file = 'outlays-fy2019.csv')</code></pre>
-<div id="plot-2-reshape-outlays-data" class="section level2">
-<h2>Plot 2: Reshape outlays data</h2>
-<p>Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year.</p>
+<div id="prep-for-plots-2-3-group-by-agency-name-and-sum-expenditures-within-the-same-agency-and-year." class="section level1">
+<h1>Prep For Plots 2 &amp; 3: Group by agency name and sum expenditures within the same agency and year.</h1>
+<ul>
+<li>Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year.</li>
+</ul>
 <pre><code>
 budget_longform &lt;- gather(budg_2019, fiscal_year, expenditure, '1962':'2018', factor_key=TRUE)
 
@@ -437,9 +443,9 @@ budget_longform &lt;- gather(budg_2019, fiscal_year, expenditure, '1962':'2018',
 keep_cols &lt;- c('Agency Name', 'Bureau Name', 'Account Name', 'Treasury Agency Code', 'Subfunction Title', 'BEA Category', 'Grant/non-grant split' , 'On- or Off- Budget', 'fiscal_year', 'expenditure')
 
 budget_longform &lt;- budget_longform[keep_cols]</code></pre>
-</div>
-<div id="plot-2-group-by-agency-name-and-sum-expenditures-within-the-same-agency-and-year." class="section level2">
-<h2>Plot 2: Group by agency name and sum expenditures within the same agency and year.</h2>
+<ul>
+<li>Take the reshaped longform budget data and group by fiscal year and agency name.</li>
+</ul>
 <pre><code>outlays &lt;- budget_longform %&gt;% select(fiscal_year, `Agency Name`, expenditure) %&gt;%
             group_by(fiscal_year, `Agency Name`) %&gt;%
             tally(expenditure)
@@ -450,7 +456,54 @@ outlays$n &lt;- NULL
 
 ## Rename `Agency Name` in snake case.
 colnames(outlays)[2] &lt;- 'agency_name'</code></pre>
+<div id="plot-2-facetwrap-grid-showing-the-annual-outlays-1995-2018-of-some-of-the-largest-agencies-departments" class="section level2">
+<h2>Plot 2: FacetWrap Grid Showing the Annual Outlays 1995-2018 of Some of the Largest Agencies &amp; Departments</h2>
+<ul>
+<li>Filter to the fiscal years 1995 to 2018.</li>
+<li>Filter to only the 12 agencies/departments with the largest budgets.</li>
+</ul>
+<pre><code>outlays %&gt;%
+  filter(fiscal_year  %in% c(1995:2018)) %&gt;%
+  filter(agency_name %in% c(&quot;Social Security Administration&quot;,&quot;Department of Health and Human Services&quot;,&quot;Department of Defense--Military Programs&quot;
+          ,&quot;Department of the Treasury&quot;,&quot;Department of Agriculture&quot;, &quot;Department of Veterans Affairs&quot;, &quot;Department of Labor&quot;, 
+          &quot;Office of Personnel Management&quot;, &quot;Department of Transportation&quot;, &quot;Department of Education&quot;, &quot;Other Defense Civil Programs&quot;, 
+          &quot;Department of Housing and Urban Development&quot;)) %&gt;%
+          
+  ggplot(aes(x = fiscal_year, y = dollars_thousands, fill = agency_name)) +
+  geom_histogram(stat = &quot;sum&quot;) + 
+  facet_wrap(~agency_name) +
+  scale_y_continuous(name = &quot;Outlays (Thousands of US Dollars)&quot;, labels = scales::dollar) +
+
+  labs(title = &quot;Departmental Outlays Since 1995, Top 12 Departments By Outlays&quot;,
+       subtitle = &quot;Some agencies, like the Dept of Defense and the Treasury, have experienced significant shifts in outlays since 1995.&quot;,
+       caption=&quot;Source: United States. Office of Management and Budget. Public Budget Database.&quot;,
+       x = &quot;Fiscal Year&quot;,
+       y = &quot;Outlays In Thousands of US Dollars &quot;) + 
+       
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text = element_text(face = &quot;plain&quot;, 
+        size = rel(0.9)),
+        plot.title = element_text(color=&quot;black&quot;, size=14, face=&quot;bold&quot;, hjust = 0.5),
+        plot.subtitle = element_text(color=&quot;black&quot;, size=12, hjust =0.5),
+        axis.title.x = element_text(color=&quot;black&quot;, size=14),
+        axis.title.y = element_text(color=&quot;black&quot;, size=14),
+        plot.caption = element_text(color=&quot;black&quot;, size=8, face=&quot;italic&quot;),
+        legend.position=&quot;none&quot;
+        )</code></pre>
 </div>
+</div>
+<div id="prep-for-plot-3-group-by-agency-name-and-sum-expenditures-within-the-same-agency-and-year." class="section level1">
+<h1>Prep For Plot 3: Group by agency name and sum expenditures within the same agency and year.</h1>
+<pre><code>outlays &lt;- budget_longform %&gt;% select(fiscal_year, `Agency Name`, expenditure) %&gt;%
+            group_by(fiscal_year, `Agency Name`) %&gt;%
+            tally(expenditure)
+
+## Give the expenditures column a descriptive name          
+outlays &lt;- mutate(.data = outlays, dollars_thousands = n)
+outlays$n &lt;- NULL
+
+## Rename `Agency Name` in snake case.
+colnames(outlays)[2] &lt;- 'agency_name'</code></pre>
 <div id="plot-2-plot-the-thing" class="section level2">
 <h2>Plot 2: Plot the thing!</h2>
 <pre><code>ggplot(outlays, aes(x=fiscal_year, y=0)) + geom_point()
@@ -463,34 +516,36 @@ ggplot(filter(outlays_2018, dollars_thousands &gt; 2000 | dollars_thousands &lt;
 </div>
 <div id="plot-3-federal-government-outlays-by-agency-by-year" class="section level1">
 <h1>Plot 3: Federal Government Outlays by Agency By Year</h1>
-<div id="i-take-the-federal-government-outlays-dataset-and-choose-the-top-8-departments-by-total-amount-spent-over-the-last-9-years." class="section level3">
-<h3>I take the federal government outlays dataset and choose the top 8 departments by total amount spent over the last 9 years.</h3>
 <ul>
+<li>I take the federal government outlays dataset and choose the top 8 departments by total amount spent over the last 9 years.</li>
 <li>Limit the years to just the last 9 so that the point plot is comprehensible.</li>
 <li>Group by agency name and fiscal year.</li>
 </ul>
 <pre><code>outlays %&gt;%
-  filter(agency_name %in% c(&quot;Social Security Administration&quot;,&quot;Department of Health and Human Services&quot;,&quot;Department of Defense--Military Programs&quot;
-    ,&quot;Department of the Treasury&quot;,&quot;Department of Agriculture&quot;, &quot;Department of Veterans Affairs&quot;, &quot;Department of Labor&quot;, &quot;Office of Personnel Management&quot;)) %&gt;% 
+  filter(agency_name %in% c(&quot;Social Security Administration&quot;,&quot;Department of Health and Human Services&quot;,&quot;Department of Defense--Military Programs&quot;, &quot;Department of the Treasury&quot;,&quot;Department of Agriculture&quot;, &quot;Department of Veterans Affairs&quot;, &quot;Department of Labor&quot;, &quot;Office of Personnel Management&quot;)) %&gt;% 
+    
     filter(fiscal_year %in% c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018)) %&gt;%
+    
   group_by(agency_name, fiscal_year) %&gt;%
   summarize(dollars_thousands = sum(dollars_thousands)) %&gt;%
+  
       ggplot(aes(x = fiscal_year, y = dollars_thousands, color = agency_name, group=agency_name)) +
       geom_point() + geom_line() + ggpubr::rotate_x_text() +
       scale_y_continuous(name = &quot;Outlays (Thousands of US Dollars)&quot;, labels = scales::dollar) +
+        
         labs(title = &quot;Federal Government Outlays By Agency By Year (Top 8 Agencies By Outlays)&quot;,
-        subtitle = &quot;The Department of Health and Human Services and the Social Security Administration Had the Largest Outlays&quot;,
-        caption = &quot;Source: United States. Office of Management and Budget. Public Budget Database.&quot;,
-        x = &quot;Year&quot;,
-        y = &quot;Outlays (Thousands of US Dollars)&quot; +              
-            theme(plot.title = element_text(color=&quot;black&quot;, size=14, face=&quot;bold&quot;, hjust = 0.5),
-                   plot.subtitle = element_text(color=&quot;black&quot;, size=12, hjust =0.5),
-                   axis.title.x = element_text(color=&quot;black&quot;, size=14, angle = 90),
-                   axis.title.y = element_text(color=&quot;black&quot;, size=14),
-                   plot.caption = element_text(color=&quot;black&quot;, size=8, face=&quot;italic&quot;)
-                   )
+          subtitle = &quot;The Department of Health and Human Services and the Social Security Administration Had the Largest Outlays&quot;,
+          caption = &quot;Source: United States. Office of Management and Budget. Public Budget Database.&quot;,
+          x = &quot;Year&quot;,
+          y = &quot;Outlays (Thousands of US Dollars)&quot; +              
+            
+          theme(plot.title = element_text(color=&quot;black&quot;, size=14, face=&quot;bold&quot;, hjust = 0.5),
+              plot.subtitle = element_text(color=&quot;black&quot;, size=12, hjust =0.5),
+              axis.title.x = element_text(color=&quot;black&quot;, size=14, angle = 90),
+              axis.title.y = element_text(color=&quot;black&quot;, size=14),
+              plot.caption = element_text(color=&quot;black&quot;, size=8, face=&quot;italic&quot;)
+              )
         )</code></pre>
-</div>
 </div>
 
 
