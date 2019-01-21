@@ -376,26 +376,12 @@ $(document).ready(function () {
 </div>
 
 
-<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE)
-library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
-<pre><code>## ✔ ggplot2 3.1.0     ✔ purrr   0.2.5
-## ✔ tibble  2.0.1     ✔ dplyr   0.7.8
-## ✔ tidyr   0.8.2     ✔ stringr 1.3.1
-## ✔ readr   1.3.1     ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(here)</code></pre>
-<pre><code>## here() starts at /Users/ianlyons/Documents/2019 Winter/Data Visualization/fed_budget</code></pre>
-<pre class="r"><code>library(gghighlight)</code></pre>
-<div id="read-in-tax-expenditure-data-for-plot-1" class="section level2">
-<h2>Read in tax expenditure data for Plot 1</h2>
+<div id="read-in-tax-expenditure-data-for-plot-1" class="section level1">
+<h1>Read in tax expenditure data for Plot 1</h1>
 <p>Source for tax expenditures on the Treasury Department Website: <a href="https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures" class="uri">https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures</a></p>
 <pre><code>base_df &lt;- read_csv(file = 'tax_expenditures_18to28_renamed.csv')
 
 budg_2019 &lt;- read_csv(file = 'outlays-fy2019.csv')</code></pre>
-</div>
 <div id="reshape-data-for-plot-1" class="section level2">
 <h2>Reshape Data For Plot 1</h2>
 <p>Create a long-form version of the tax expenditures dataset to use in a time-series plot. That is, create one row for each category, detail, and fiscal year. Then drop the cumulative ‘FY2019_to_2028’ column since I won’t be using it.</p>
@@ -433,25 +419,28 @@ plot1 &lt;- bar_to_plot +
                    axis.title.y = element_text(color=&quot;black&quot;, size=10),
                    plot.caption = element_text(color=&quot;black&quot;, size=8, face=&quot;italic&quot;)
                    )
-    )
-ggsave('tax_expenditures_to_2028.pdf', path=&quot;visuals/&quot;, width=18, height=9, units='in')</code></pre>
+    )</code></pre>
+<p><br><br><br><br></p>
 </div>
-<div id="read-in-federal-budget-outlays-data" class="section level2">
-<h2>Read in Federal Budget Outlays data</h2>
+</div>
+<div id="plot-2-read-in-federal-budget-outlays-data" class="section level1">
+<h1>Plot 2: Read in Federal Budget Outlays data</h1>
 <p>Source for federal outlays on the Office of Management and Budget website: * <a href="https://www.whitehouse.gov/omb/supplemental-materials/" class="uri">https://www.whitehouse.gov/omb/supplemental-materials/</a></p>
 <pre><code>budg_2019 &lt;- read_csv(file = 'outlays-fy2019.csv')</code></pre>
-</div>
-<div id="reshape-data-for-plot-2" class="section level2">
-<h2>Reshape Data For Plot 2</h2>
-<p>Create a long-form version of the tax expenditures dataset to use in a time-series plot. That is, create one row for each category, detail, and fiscal year. Then drop the cumulative column since I won’t be using it.</p>
+<div id="plot-2-reshape-outlays-data" class="section level2">
+<h2>Plot 2: Reshape outlays data</h2>
+<p>Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year.</p>
 <pre><code>
 budget_longform &lt;- gather(budg_2019, fiscal_year, expenditure, '1962':'2018', factor_key=TRUE)
 
+## Keep only descriptive column names rather than codes. 
 keep_cols &lt;- c('Agency Name', 'Bureau Name', 'Account Name', 'Treasury Agency Code', 'Subfunction Title', 'BEA Category', 'Grant/non-grant split' , 'On- or Off- Budget', 'fiscal_year', 'expenditure')
 
-budget_longform &lt;- budget_longform[keep_cols]
-
-outlays &lt;- budget_longform %&gt;% select(fiscal_year, `Agency Name`, expenditure) %&gt;%
+budget_longform &lt;- budget_longform[keep_cols]</code></pre>
+</div>
+<div id="plot-2-group-by-agency-name-and-sum-expenditures-within-the-same-agency-and-year." class="section level2">
+<h2>Plot 2: Group by agency name and sum expenditures within the same agency and year.</h2>
+<pre><code>outlays &lt;- budget_longform %&gt;% select(fiscal_year, `Agency Name`, expenditure) %&gt;%
             group_by(fiscal_year, `Agency Name`) %&gt;%
             tally(expenditure)
 
@@ -461,6 +450,11 @@ outlays$n &lt;- NULL
 
 ## Rename `Agency Name` in snake case.
 colnames(outlays)[2] &lt;- 'agency_name'</code></pre>
+</div>
+<div id="plot-2-plot-the-thing" class="section level2">
+<h2>Plot 2: Plot the thing!</h2>
+<pre><code>ggplot(outlays, aes(x=fiscal_year, y=0)) + geom_point()</code></pre>
+</div>
 </div>
 
 
