@@ -7,9 +7,10 @@ output:
   pdf_document: default
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(rmarkdown)
 library(here)
 library(gghighlight)
 library(ggpubr)
@@ -22,10 +23,10 @@ https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures
 
 * Source for federal outlays on the Office of Management and Budget website: 
 https://www.whitehouse.gov/omb/supplemental-materials/
-```{}
-base_df <- read_csv(file = 'tax_expenditures_18to28_renamed.csv')
+```{r}
+base_df <- read_csv(file = 'raw_data/tax_expenditures_18to28_renamed.csv')
 
-budg_2019 <- read_csv(file = 'outlays-fy2019.csv')
+budg_2019 <- read_csv(file = 'raw_data/outlays-fy2019.csv')
 ```
 
 
@@ -34,7 +35,7 @@ budg_2019 <- read_csv(file = 'outlays-fy2019.csv')
 * Create a long-form version of the tax expenditures dataset to use in a time-series plot. That is, create one row for each category, detail, and fiscal year. 
 * Drop the cumulative 'FY2019_to_2028' column since I won't be using it.
 
-```{}
+```{r}
 tax_long <- gather(base_df, fiscal_year, expenditure, '2018':'2028', factor_key=TRUE)
 tax_long$FY2019_to_2028 <- NULL
 ```
@@ -44,7 +45,7 @@ tax_long$FY2019_to_2028 <- NULL
 * Create a time-series dataset so that tax expenditures can be compared over the fiscal years included.
 * Convert the expenditure column to be in billions of dollars by dividing by 1000 (the tax expenditures dataset is in millions of dollars by default).
 
-```{}
+```{r}
 time_series <- tax_long %>% select(fiscal_year, Category, expenditure) %>%
                   group_by(fiscal_year, Category) %>%
                   tally(expenditure)
@@ -73,6 +74,7 @@ plot1 <- bar_to_plot +
           plot.caption = element_text(color="black", size=8, face="italic")
           )
     )
+plot1
 ```
 
 <br><br><br><br>
@@ -81,7 +83,7 @@ plot1 <- bar_to_plot +
 
 * Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year. 
 
-```{}
+```{r}
 
 budget_longform <- gather(budg_2019, fiscal_year, expenditure, '1962':'2018', factor_key=TRUE)
 
@@ -93,7 +95,7 @@ budget_longform <- budget_longform[keep_cols]
 
 * Take the reshaped longform budget data and group by fiscal year and agency name. 
 
-```{}
+```{r}
 outlays <- budget_longform %>% select(fiscal_year, `Agency Name`, expenditure) %>%
 			group_by(fiscal_year, `Agency Name`) %>%
 			tally(expenditure)
@@ -114,7 +116,7 @@ colnames(outlays)[2] <- 'agency_name'
 * Filter to the fiscal years 1995 to 2018.
 * Filter to only the 12 agencies/departments with the largest budgets.
 
-```{}
+```{r}
 outlays %>%
   filter(fiscal_year  %in% c(1995:2018)) %>%
   filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services","Department of Defense--Military Programs"
@@ -154,7 +156,7 @@ outlays %>%
 * Limit the years to just the last 9 so that the point plot is comprehensible. 
 * Group by agency name and fiscal year. 
 
-```{}
+```{r}
 outlays %>%
   filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services","Department of Defense--Military Programs", "Department of the Treasury","Department of Agriculture", "Department of Veterans Affairs", "Department of Labor", "Office of Personnel Management")) %>% 
 	
