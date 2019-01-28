@@ -1,0 +1,239 @@
+---
+title: "Exploratory Data Visualizations - Federal Budget Data"
+author: "Ian Lyons"
+date: "1/27/2019"
+output: html_document
+urlcolor: blue
+---
+
+```{r setup, include=TRUE}
+library(tidyverse)
+library(rmarkdown)
+library(here)
+library(gghighlight)
+library(ggpubr)
+library(formatR)
+library(tinytex)
+```
+
+## Read in Tax Expenditure and Federal Outlays Data
+
+* Source for tax expenditures on the Treasury Department Website: 
+https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures
+
+* Source for federal outlays on the Office of Management and Budget website: 
+https://www.whitehouse.gov/omb/supplemental-materials/
+```{r, tidy=TRUE}
+base_df <- read_csv(file = 'raw_data/tax_expenditures_18to28_renamed.csv')
+
+budg_2019 <- read_csv(file = 'raw_data/outlays-fy2019.csv')
+```
+
+
+## Reshape Tax Expenditure Dataframe For Plot 1
+
+* Create a long-form version of the tax expenditures dataset to use in a time-series plot. That is, create one row for each category, detail, and fiscal year. 
+* Drop the cumulative 'FY2019_to_2028' column since I won't be using it.
+
+```{r, tidy=TRUE}
+tax_long <- gather(base_df, fiscal_year, expenditure, '2018':'2028', factor_key=TRUE)
+tax_long$FY2019_to_2028 <- NULL
+```
+
+
+## Plot 1: Projected Tax Expenditures By Policy Category
+* Create a time-series dataset so that tax expenditures can be compared over the fiscal years included.
+* Convert the expenditure column to be in billions of dollars by dividing by 1000 (the tax expenditures dataset is in millions of dollars by default).
+
+```{r, tidy=TRUE}
+time_series <- tax_long %>% select(fiscal_year, Category, expenditure) %>%
+                  group_by(fiscal_year, Category) %>%
+                  tally(expenditure)
+
+time_series <- mutate(.data = time_series, amount_billions = n/1000)
+time_series$n <- NULL
+
+bar_to_plot <- ggplot(data=time_series, aes(x=fiscal_year, y=amount_billions, color=Category, fill=Category)) + geom_col()
+
+plot1 <- bar_to_plot + 
+    scale_y_continuous(name = "Tax Expenditures in Billions of Nominal Dollars", 
+         labels =c('$0', '$433', '$866', '$1,300', '$1,733', '$2,166', '$2,600') 
+         , breaks=c(0, 433, 866, 1300, 1733, 2166, 2600), limits = c(0,2600)) + 
+    scale_x_discrete(name='Fiscal Year') + 
+    
+    labs(title = "US Federal Government Tax Expenditures, 2018-2028", 
+         subtitle = "The United States spends trillions of dollars on tax loopholes each year",
+         caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n 
+         * These estimates are made relative to current law as of July 1, 2018", 
+         x = "Fiscal Year" + 
+             
+        theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
+          plot.subtitle = element_text(color="black", size=12, hjust =0.5),
+          axis.title.x = element_text(color="black", size=12),
+          axis.title.y = element_text(color="black", size=12),
+          plot.caption = element_text(color="black", size=8, face="italic")
+          )
+    )
+plot1
+```
+
+<br><br><br><br>
+
+# Prep For Plots 2 & 3: Group by agency name and sum expenditures within the same agency and year.
+
+* Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year. 
+
+```{r, tidy=TRUE}
+budget_longform <- gather(budg_2019, fiscal_year, expenditure, '1962':'2018', factor_key=TRUE)
+
+## Keep only descriptive column names rather than codes. 
+keep_cols <- c('Agency Name', 'Bureau Name', 'Account Name', 'Treasury Agency Code', 'Subfunction Title', 'BEA Category', 'Grant/non-grant split' , 'On- or Off- Budget', 'fiscal_year', 'expenditure')
+
+budget_longform <- budget_longform[keep_cols]
+```
+
+* Take the reshaped longform budget data and group by fiscal year and agency name. 
+
+```{r, tidy=TRUE}
+outlays <- budget_longform %>% select(fiscal_year, `Agency Name`, expenditure) %>%
+			group_by(fiscal_year, `Agency Name`) %>%
+			tally(expenditure)
+
+## Give the expenditures column a descriptive name			
+outlays <- mutate(.data = outlays, dollars_thousands = n)
+outlays$n <- NULL
+
+## Rename `Agency Name` in snake case.
+colnames(outlays)[2] <- 'agency_name'
+
+```
+
+<br><br>
+
+## Plot 2: FacetWrap Grid Showing the Annual Outlays 1995-2018 of Some of the Largest Agencies & Departments
+
+* Filter to the fiscal years 1995 to 2018.
+* Filter to only the 12 agencies/departments with the largest budgets.
+
+```{r, tidy=TRUE}
+outlays %>%
+  filter(fiscal_year  %in% c(1995:2018)) %>%
+  filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services","Department of Defense--Military Programs"
+	      ,"Department of the Treasury","Department of Agriculture", "Department of Veterans Affairs", "Department of Labor", 
+	      "Office of Personnel Management", "Department of Transportation", "Department of Education", "Other Defense Civil Programs", 
+	      "Department of Housing and Urban Development")) %>%
+	      
+  ggplot(aes(x = fiscal_year, y = dollars_thousands, fill = agency_name)) +
+  geom_histogram(stat = "sum") + 
+  facet_wrap(~agency_name) +
+  scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar) +
+
+  labs(title = "Departmental Outlays Since 1995, Top 12 Departments By Outlays",
+       subtitle = "Some agencies, like the Dept of Defense and the Treasury, have experienced significant shifts in outlays since 1995.",
+       caption="Source: United States. Office of Management and Budget. Public Budget Database.",
+       x = "Fiscal Year",
+       y = "Outlays In Thousands of US Dollars ") + 
+       
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text = element_text(face = "plain", 
+        size = rel(0.9)),
+        plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
+        plot.subtitle = element_text(color="black", size=12, hjust =0.5),
+        axis.title.x = element_text(color="black", size=14),
+        axis.title.y = element_text(color="black", size=14),
+        plot.caption = element_text(color="black", size=8, face="italic"),
+        legend.position="none"
+        )
+```
+
+
+<br><br>
+
+# Plot 3: Federal Government Outlays by Agency By Year
+* Use the same outlays dataset. 
+* I take the federal government outlays dataset and choose the top 8 departments by total amount spent over the last 9 years.
+* Limit the years to just the last 9 so that the point plot is comprehensible. 
+* Group by agency name and fiscal year. 
+
+```{r, tidy=TRUE}
+outlays %>%
+  filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services",
+                            "Department of Defense--Military Programs", "Department of the Treasury","Department of Agriculture", 
+                            "Department of Veterans Affairs", "Department of Labor", "Office of Personnel Management")) %>% 
+	
+	filter(fiscal_year %in% c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018)) %>%
+	
+  group_by(agency_name, fiscal_year) %>%
+  summarize(dollars_thousands = sum(dollars_thousands)) %>%
+  
+      ggplot(aes(x = fiscal_year, y = dollars_thousands, color = agency_name, group=agency_name)) +
+      geom_point() + geom_line() + ggpubr::rotate_x_text() +
+      scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar) +
+        
+        labs(title = "Federal Government Outlays By Agency By Year (Top 8 Agencies By Outlays)",
+          subtitle = "The Department of Health and Human Services and the Social Security Administration Had the Largest Outlays",
+          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
+          x = "Year",
+          y = "Outlays (Thousands of US Dollars)" +              
+            
+          theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
+              plot.subtitle = element_text(color="black", size=12, hjust =0.5),
+              axis.title.x = element_text(color="black", size=14, angle = 90),
+              axis.title.y = element_text(color="black", size=14),
+              plot.caption = element_text(color="black", size=8, face="italic")
+              )
+        )
+```
+
+
+
+## Plot 4: Discretionary vs Mandatory
+```{r}
+spendtype <- budget_longform %>% filter(fiscal_year %in% c(2018)) %>% filter(expenditure > 0) %>% select(fiscal_year, `Agency Name`, `BEA Category`, `Grant/non-grant split`, expenditure) %>%
+    group_by(fiscal_year, `Agency Name`, `BEA Category`) %>%
+    tally(expenditure)
+
+v2_spendtype <- spread(spendtype, key = `BEA Category`, value = `n`)
+colnames(v2_spendtype) <- c('fiscal_year', 'agency_name', 'discretionary', 'mandatory', 'net_interest')
+v2_spendtype <- v2_spendtype %>% rowwise() %>% mutate(prop_mandatory = mandatory / sum(discretionary, mandatory, net_interest, na.rm=TRUE))
+v2v2_spendtype <- v2_spendtype %>% rowwise() %>% mutate(total_spend = sum(discretionary, mandatory, net_interest, na.rm=TRUE))
+v2_spendtype <- mutate(.data = v2_spendtype,  mandatory = coalesce(mandatory, 0))
+v2_spendtype <- mutate(.data = v2_spendtype,  discretionary = coalesce(discretionary, 0))
+v2_spendtype <- mutate(.data = v2_spendtype,  net_interest = coalesce(net_interest, 0))
+v2_spendtype <- mutate(.data = v2_spendtype,  prop_mandatory = coalesce(prop_mandatory, 0))
+
+ggplot(data=v2_spendtype, aes(x = mandatory, y=discretionary)) + 
+    geom_point(aes(size=total_spend, color=prop_mandatory)) + 
+    scale_y_log10(name = "Mandatory Outlays (2018)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) + 
+    scale_x_log10(name = "Discretionary Outlays (2018)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) + 
+    
+    labs(title = "Top Spending Agencies Have a Mix of Discretionary and Mandatory Spending",
+         subtitle = "The DOD is one of the largest discretionary outlays, while HHS is one of the largerst mandatory outlays",
+         caption = "Source: United States. Office of Management and Budget. Public Budget Database." +  
+             theme(plot.title = element_text(color="black", size=18, face="bold", hjust = 0.5),
+                   axis.title.x = element_text(color="black", size=18), axis.text.x = element_text(angle = 90, hjust = 1),
+                   axis.title.y = element_text(color="black", size=18)))+ 
+    
+    geom_text(size=2, aes(label=ifelse(mandatory>0 & discretionary > 0,as.character(agency_name),''), hjust=0, vjust=0)) + 
+    
+    scale_colour_gradient2(low = "red", mid = "white", high = "blue", midpoint = .5, space = "Lab", na.value = "grey50", guide = "colourbar", aesthetics = "colour")
+```
+
+
+
+### Plot 5: 
+
+```{r, tidy=TRUE}
+type_over_time <- budget_longform %>% select(fiscal_year, `BEA Category`, expenditure) %>%     group_by(fiscal_year, `BEA Category`) %>% tally(expenditure) 
+
+#colnames(type_over_time) <- c('fiscal_year', 'discretionary', 'mandatory', 'net_interest')
+#type_over_time <- type_over_time %>% mutate(total_spend = discretionary + mandatory + net_interest)
+#type_over_time <- type_over_time %>% mutate(prop_disc = discretionary/total_spend)
+#type_over_time <- type_over_time %>% mutate(prop_mand = mandatory/total_spend)
+#type_over_time <- type_over_time %>% mutate(prop_int = net_interest/total_spend)
+
+type_over_time %>% group_by(fiscal_year) %>% ggplot(aes(x=fiscal_year, y=n, color=`BEA Category`, fill=`BEA Category`)) +geom_area(position = "fill")
+```
+
+
+
