@@ -2,8 +2,13 @@
 title: "Exploratory Data Visualizations - Federal Budget Data"
 author: "Ian Lyons"
 date: "1/27/2019"
-output: html_document
+output: 
+  html_document: 
+    fig_caption: yes
+    fig_height: 8
+    fig_width: 11
 urlcolor: blue
+
 ---
 
 ```{r setup, include=TRUE}
@@ -187,8 +192,11 @@ outlays %>%
 
 
 
-## Plot 4: Discretionary vs Mandatory
-```{r}
+## Plot 4: Discretionary vs Mandatory at the Agency Level
+
+I don't like this plot and I'm going to get rid of it. ¯\_(ツ)_/¯
+
+```{r, echo=FALSE}
 spendtype <- budget_longform %>% filter(fiscal_year %in% c(2018)) %>% filter(expenditure > 0) %>% select(fiscal_year, `Agency Name`, `BEA Category`, `Grant/non-grant split`, expenditure) %>%
     group_by(fiscal_year, `Agency Name`, `BEA Category`) %>%
     tally(expenditure)
@@ -222,9 +230,14 @@ ggplot(data=v2_spendtype, aes(x = mandatory, y=discretionary)) +
 
 
 
-### Plot 5: 
+## Plot 5: Share of Spending Over Time  
+The share of federal spending classified as mandatory has grown as a percentage of total spending since the 1960s. 
 
-```{r, tidy=TRUE}
+Mandatory spending is spending controlled by laws other than annual appropriations acts. This spending has been mandated by Congress in the past and does does have to be reappropriated each year. Most mandatory programs are fall under health care (e.g. Medicare, Medicaid), social security, and other income support programs. Spending on mandatory programs is determined by the number of eligible recipients. 
+
+Discretionary spending must be appropriated each year by the House and Senate. The largest portion of discretionary spending is funding for the Department of Defense and other defense-related programs. Non-defense discretionary spending, just under half of total discretionary spending in 2018, accounts for all federal spending on diplomacy, education, transportation, research, law enforcement, and paying for the operations of the federal government. 
+
+```{r echo=FALSE, tidy=TRUE}
 type_over_time <- budget_longform %>% select(fiscal_year, `BEA Category`, expenditure) %>%     group_by(fiscal_year, `BEA Category`) %>% tally(expenditure) 
 
 #colnames(type_over_time) <- c('fiscal_year', 'discretionary', 'mandatory', 'net_interest')
@@ -234,19 +247,18 @@ type_over_time <- budget_longform %>% select(fiscal_year, `BEA Category`, expend
 #type_over_time <- type_over_time %>% mutate(prop_int = net_interest/total_spend)
 
 type_over_time %>% group_by(fiscal_year) %>% ggplot(aes(x=fiscal_year, y=n, color=`BEA Category`, fill=`BEA Category`)) +
-  geom_area(position = "fill") + 
-  scale_y_continuous(expand = c(0, 0)) +
-  
-    labs(title = "Mandatory Spending Has Accounted for a Larger and Larger Share of the Federal Budget",
-         subtitle = "Subtitle",
+  geom_area(position = "fill") + scale_y_continuous(expand = c(0, 0)) + geom_line(position = "fill", aes(group=`BEA Category`)) +
+    labs(title = "Mandatory Spending Has Accounted for a \n Larger and Larger Share of the Federal Budget",
+         subtitle = "",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
          x = "Year",
          y = "Proportion of Federal Budget") +  
-  
          theme(plot.title = element_text(color="black", size=18, face="bold", hjust = 0.5),
                    axis.title.x = element_text(color="black", size=18), axis.text.x = element_text(angle = 90, hjust = 1),
                    axis.title.y = element_text(color="black", size=18))
 ```
+
+
 
 
 
