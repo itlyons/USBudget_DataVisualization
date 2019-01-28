@@ -123,17 +123,19 @@ colnames(outlays)[2] <- 'agency_name'
 ```{r, tidy=TRUE}
 outlays %>%
   filter(fiscal_year  %in% c(1995:2018)) %>%
-  filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services","Department of Defense--Military Programs"
-	      ,"Department of the Treasury","Department of Agriculture", "Department of Veterans Affairs", "Department of Labor", 
-	      "Office of Personnel Management", "Department of Transportation", "Department of Education", "Other Defense Civil Programs", 
-	      "Department of Housing and Urban Development")) %>%
+  filter(agency_name %in% c("Department of Agriculture",
+  "Department of Defense--Military Programs",
+  "Department of Education", 
+  "Department of Health and Human Services",
+  "Department of Homeland Security",
+  "Department of Housing and Urban Development", "Department of Labor", "Department of the Treasury", "Department of Transportation", "Department of Veterans Affairs")) %>%
 	      
   ggplot(aes(x = fiscal_year, y = dollars_thousands, fill = agency_name)) +
   geom_histogram(stat = "sum") + 
   facet_wrap(~agency_name) +
-  scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar) +
+  scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) +
 
-  labs(title = "Departmental Outlays Since 1995, Top 12 Departments By Outlays",
+  labs(title = "Selected Departmental Outlays Since 1995",
        subtitle = "Some agencies, like the Dept of Defense and the Treasury, have experienced significant shifts in outlays since 1995.",
        caption="Source: United States. Office of Management and Budget. Public Budget Database.",
        x = "Fiscal Year",
@@ -163,20 +165,20 @@ outlays %>%
 ```{r, tidy=TRUE}
 outlays %>%
   filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services",
-                            "Department of Defense--Military Programs", "Department of the Treasury","Department of Agriculture", 
-                            "Department of Veterans Affairs", "Department of Labor", "Office of Personnel Management")) %>% 
+                            "Department of Defense--Military Programs", "Department of Agriculture", 
+                            "Department of Veterans Affairs", "Department of Labor")) %>% 
 	
 	filter(fiscal_year %in% c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018)) %>%
 	
   group_by(agency_name, fiscal_year) %>%
   summarize(dollars_thousands = sum(dollars_thousands)) %>%
   
-      ggplot(aes(x = fiscal_year, y = dollars_thousands, color = agency_name, group=agency_name)) +
-      geom_point() + geom_line() + ggpubr::rotate_x_text() +
-      scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar) +
+      ggplot(aes(x = fiscal_year, y = (dollars_thousands), color = agency_name, group=agency_name)) +
+      geom_point() + geom_line() + ggpubr::rotate_x_text() + theme(legend.position="none") +
+      scale_y_log10(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
         
-        labs(title = "Federal Government Outlays By Agency By Year (Top 8 Agencies By Outlays)",
-          subtitle = "The Department of Health and Human Services and the Social Security Administration Had the Largest Outlays",
+        labs(title = "Since the Recession, Departments Have Had Drastically Different Treatment",
+          subtitle = "Labor's stimulus funding was short-lived, and DoD's expenditures decrerased as wars winded down",
           caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
           x = "Year",
           y = "Outlays (Thousands of US Dollars)" +              
