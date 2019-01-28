@@ -378,12 +378,12 @@ $(document).ready(function () {
 
 <pre class="r"><code>knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
+<pre><code>## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────── tidyverse 1.2.1 ──</code></pre>
 <pre><code>## ✔ ggplot2 3.1.0     ✔ purrr   0.2.5
 ## ✔ tibble  2.0.1     ✔ dplyr   0.7.8
 ## ✔ tidyr   0.8.2     ✔ stringr 1.3.1
 ## ✔ readr   1.3.1     ✔ forcats 0.3.0</code></pre>
-<pre><code>## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+<pre><code>## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(rmarkdown)
@@ -400,6 +400,7 @@ library(ggpubr)</code></pre>
 <pre><code>## The following object is masked from 'package:tidyr':
 ## 
 ##     extract</code></pre>
+<pre class="r"><code>library(tinytex)</code></pre>
 <div id="read-in-tax-expenditure-and-federal-outlays-data" class="section level2">
 <h2>Read in Tax Expenditure and Federal Outlays Data</h2>
 <ul>
@@ -564,7 +565,9 @@ colnames(outlays)[2] &lt;- 'agency_name'</code></pre>
 <li>Group by agency name and fiscal year.</li>
 </ul>
 <pre class="r"><code>outlays %&gt;%
-  filter(agency_name %in% c(&quot;Social Security Administration&quot;,&quot;Department of Health and Human Services&quot;,&quot;Department of Defense--Military Programs&quot;, &quot;Department of the Treasury&quot;,&quot;Department of Agriculture&quot;, &quot;Department of Veterans Affairs&quot;, &quot;Department of Labor&quot;, &quot;Office of Personnel Management&quot;)) %&gt;% 
+  filter(agency_name %in% c(&quot;Social Security Administration&quot;,&quot;Department of Health and Human Services&quot;,
+                            &quot;Department of Defense--Military Programs&quot;, &quot;Department of the Treasury&quot;,&quot;Department of Agriculture&quot;, 
+                            &quot;Department of Veterans Affairs&quot;, &quot;Department of Labor&quot;, &quot;Office of Personnel Management&quot;)) %&gt;% 
     
     filter(fiscal_year %in% c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018)) %&gt;%
     
