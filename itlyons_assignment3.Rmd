@@ -201,6 +201,7 @@ v2_spendtype <- mutate(.data = v2_spendtype,  mandatory = coalesce(mandatory, 0)
 v2_spendtype <- mutate(.data = v2_spendtype,  discretionary = coalesce(discretionary, 0))
 v2_spendtype <- mutate(.data = v2_spendtype,  net_interest = coalesce(net_interest, 0))
 v2_spendtype <- mutate(.data = v2_spendtype,  prop_mandatory = coalesce(prop_mandatory, 0))
+v2_spendtype <- mutate(v2_spendtype, total_spend = discretionary +  mandatory + net_interest)
 
 ggplot(data=v2_spendtype, aes(x = mandatory, y=discretionary)) + 
     geom_point(aes(size=total_spend, color=prop_mandatory)) + 
@@ -232,7 +233,19 @@ type_over_time <- budget_longform %>% select(fiscal_year, `BEA Category`, expend
 #type_over_time <- type_over_time %>% mutate(prop_mand = mandatory/total_spend)
 #type_over_time <- type_over_time %>% mutate(prop_int = net_interest/total_spend)
 
-type_over_time %>% group_by(fiscal_year) %>% ggplot(aes(x=fiscal_year, y=n, color=`BEA Category`, fill=`BEA Category`)) +geom_area(position = "fill")
+type_over_time %>% group_by(fiscal_year) %>% ggplot(aes(x=fiscal_year, y=n, color=`BEA Category`, fill=`BEA Category`)) +
+  geom_area(position = "fill") + 
+  scale_y_continuous(expand = c(0, 0)) +
+  
+    labs(title = "Mandatory Spending Has Accounted for a Larger and Larger Share of the Federal Budget",
+         subtitle = "Subtitle",
+         caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
+         x = "Year",
+         y = "Proportion of Federal Budget") +  
+  
+         theme(plot.title = element_text(color="black", size=18, face="bold", hjust = 0.5),
+                   axis.title.x = element_text(color="black", size=18), axis.text.x = element_text(angle = 90, hjust = 1),
+                   axis.title.y = element_text(color="black", size=18))
 ```
 
 
