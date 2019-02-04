@@ -20,9 +20,10 @@ library(ggpubr)
 library(formatR)
 library(tinytex)
 library(scales)
+library(extrafont)
 ```
 
-## Read in Tax Expenditure and Federal Outlays Data
+## Sourcing
 
 * Source for tax expenditures on the Treasury Department Website: 
 https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures
@@ -36,19 +37,24 @@ budg_2019 <- read_csv(file = 'raw_data/outlays-fy2019.csv')
 ```
 
 
-## Reshape Tax Expenditure Dataframe For Plot 1
-
-* Create a long-form version of the tax expenditures dataset to use in a time-series plot. That is, create one row for each category, detail, and fiscal year. 
-* Drop the cumulative 'FY2019_to_2028' column since I won't be using it.
-
 ```{r Reshape tax expenditures data}
 tax_long <- gather(base_df, fiscal_year, expenditure, '2018':'2028', factor_key=TRUE)
 tax_long$FY2019_to_2028 <- NULL
 ```
 
-
-## Plot 1: Largest Tax Expenditures By  Category
+```{r Define my Theme}
+theme1 <- theme(plot.title = element_text(color="black", size=22, face="bold", hjust = 0.5),
+                plot.subtitle = element_text(color="black", size=18, hjust =0.5),
+                axis.title.x = element_text(color="black", size=18),
+                axis.title.y = element_text(color="black", size=18),
+                plot.caption = element_text(color="black", size=12, face="italic"),
+                plot.background=element_rect(fill="#f7f7f7"),
+                panel.grid.minor.y = element_blank())
+```
+## Largest Tax Expenditures By Category
 Tax expenditures are what we usually refer to as tax loopholes or tax breaks. The US Department of Treasury classifies these tax provisions as tax "expenditures" in recognition of the fact that they are "often viewed as alternatives to other policy instruments, such as spending or regulatory programs" ([Treasury](https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures)). 
+
+In the United States, many policies act though the tax code rather than through fiscal policy. For instance, other developed nations generally provide health care and/or health insurance for all of their citizens directly though national insurance/medical programs. However, in the United States most people receive insurance through their employer, perhaps not even realizing the generous tax treatment they and their employer are receiving.
 
 ```{r Top 7 2018 Tax Expenditures}
 time_series <- tax_long %>% select(fiscal_year, Category, expenditure) %>% filter(fiscal_year %in% c(2018)) %>% 
@@ -74,14 +80,8 @@ plot1 <- bar_to_plot +
     labs(title = "The United States spends trillions of dollars on tax loopholes each year", 
          subtitle = "US Federal Government Tax Expenditures In 2018",
          caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n * These estimates are made relative to current law as of July 1, 2018", 
-         x = "Category of Tax Break") +              
-            
-          theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
-              plot.subtitle = element_text(color="black", size=12, hjust =0.5),
-              axis.title.x = element_text(color="black", size=14), axis.text.x = element_blank(),
-              axis.title.y = element_text(color="black", size=14),
-              plot.caption = element_text(color="black", size=8, face="italic"),
-                                          legend.position="none") + 
+         x = "Category of Tax Break") + theme1 + theme(legend.position="none", axis.text.x = element_blank()) + 
+  
   geom_text(aes(label= c("\n\n\n\n\n\n\n\nCommerce\nand\nhousing", 
                          "\n\nIncome\nSecurity",
                          "\nHealth", 
@@ -98,45 +98,45 @@ last_plot()
 <br><br>
 
 
-## The largest individual tax expenditures
+## The largest individual tax expenditures  
+Looking at the largest individual tax breaks, it is easy to see the hidden cost of the American approach to health care policy. The deduction for premiums for employer-sponsored health care plans alone costs over $205 billion a year, according to the Department of Treasury. This deduction has also been blamed for pushing up health care spending in general by encouraging more generous plans with lower cost-sharing and [less managed care.](https://www.taxpolicycenter.org/briefing-book/how-does-tax-exclusion-employer-sponsored-health-insurance-work).
+
 ```{r Top Tax Expenditures}
 taxex <- filter(tax_long, fiscal_year == 2018)
 top10 <- top_n(taxex, 10)
 top10 <- arrange(top10, -expenditure)
 
-theme1 <- theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
-                plot.subtitle = element_text(color="black", size=12, hjust =0.5),
-                axis.title.x = element_text(color="black", size=14),
-                axis.title.y = element_text(color="black", size=14),
-                plot.caption = element_text(color="black", size=8, face="italic"),
-                legend.position="none")
+details <- c("Exclusion of employer health care contributions", "Capital gains (15% tax rate on 'long-term' assets)", "Exclusion of net imputed rental income (homeowner benefit)", "Defined contribution employer plans (401(k))", "Defined benefit employer plans (pensions)", "Accelerated depreciation of machinery and equipment", "Reduced tax rate on income of controlled foreign corporations", "Step-up basis of capital gains at death", "Deductibility of charitable contributions", "Capital gains exclusion- home sales")   
 
-descr <- labs(title = "The Largest Individual Tax Breaks", 
-              subtitle = "The United States spends trillions of dollars on tax loopholes each year",
+
+
+descr <- labs(title = "The Employer Health Care Deduction Dwarves Other Tax Breaks", 
+              subtitle = "Investment & Housing Tax Breaks Make Up 5/10 of the Most Expensive Tax Breaks",
               caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n 
               * These estimates are made relative to current law as of July 1, 2018", 
               x = "Description of Tax Break")
 
-expend_plot <- ggplot(data=top10, aes(x=Details, y=expenditure, color=Details, fill=Details)) + 
+expend_plot <- ggplot(data=top10, aes(x=reorder(details, expenditure), y=expenditure, color=Category, fill=Category)) + 
   geom_col(color="black") + coord_flip() +
   scale_y_continuous(expand = c(0,0), name = "Tax Expenditures in Billions of Nominal Dollars", 
-                labels = scales::dollar_format(accuracy = 1, suffix = 'B')) + 
+                labels = scales::dollar_format(scale = .001, accuracy = 1, suffix = 'B')) + 
   scale_x_discrete(labels = scales::wrap_format(18)) + 
-  scale_fill_brewer(palette="Set2") +
+  scale_fill_brewer(palette="Set2") + 
   descr +
-  theme1
+  theme1 + theme(legend.position=c(.8, .2))
 
-ggsave(filename = 'visuals/BiggestIndividualBreaks.pdf', width = 11, height = 8.5)
+ggsave(filename = 'visuals/BiggestIndividualBreaks.pdf', width = 13, height = 11)
 last_plot()
 ```
 
 
-# Prep For Plots 2 & 3: Group by agency name and sum expenditures within the same agency and year.
 
-* Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year. 
+
 
 ```{r}
-budget_longform <- gather(budg_2019, fiscal_year, expenditure, '1962':'2018', factor_key=TRUE)
+# Prep For Plots 2 & 3: Group by agency name and sum expenditures within the same agency and year.
+# * Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year. 
+budget_longform <- gather(budg_2019, fiscal_year, expenditure, '1962':'2023', factor_key=TRUE)
 
 ## Keep only descriptive column names rather than codes. 
 keep_cols <- c('Agency Name', 'Bureau Name', 'Account Name', 'Treasury Agency Code', 'Subfunction Title', 'BEA Category', 'Grant/non-grant split' , 'On- or Off- Budget', 'fiscal_year', 'expenditure')
@@ -144,9 +144,10 @@ keep_cols <- c('Agency Name', 'Bureau Name', 'Account Name', 'Treasury Agency Co
 budget_longform <- budget_longform[keep_cols]
 ```
 
-* Take the reshaped longform budget data and group by fiscal year and agency name. 
 
 ```{r}
+# Take the reshaped longform budget data and group by fiscal year and agency name. 
+
 outlays <- budget_longform %>% select(fiscal_year, `Agency Name`, expenditure) %>%
 			group_by(fiscal_year, `Agency Name`) %>%
 			tally(expenditure)
@@ -162,42 +163,39 @@ colnames(outlays)[2] <- 'agency_name'
 
 <br><br>
 
-## Plot 2: FacetWrap Grid Showing the Annual Outlays 1995-2018 of Some of the Largest Agencies & Departments
+## Annual Outlays 1998-2018 of Some of the Largest Agencies & Departments  
+Note: I need to figure out how to add recession shading and add some events, such as the September 11th terrorist attacks and the invasion of Iraq in 2003.  
 
-* Filter to the fiscal years 1995 to 2018.
-* Filter to only the 12 agencies/departments with the largest budgets.
+Departments have received differing treatment over the past two decades depending on presidential priorities and world events. We can see the effects of the recession on the highlighted departments. The Department of Treasury, whose outlays usually consist of interest payments, had to massively increase its expenditures in the depths of the financial crisis. The Department of Agriculture saw a stubborn increase in its outlays due to increased usage of SNAP, more commonly known as the food stamp program.  
 
+The September 11th 2001 terrorist attacks and the subsequent invasions of Afghanistan and Iraq saw Department of Defense Expenditures soar, until hostilities started to wind down in 2010 or so. The Department of Homeland Security, founded in 2002, has consistently received \$50-\$100 billion per year. The increase in 2018 funding for both departments is a reflection of the Trump administration's priorities.
 ```{r Facetwrap 1995-2018}
+# Filter to the fiscal years 1995 to 2018.
+# Filter to only the 12 agencies/departments with the largest budgets.
+
 facet_data <- outlays %>%
-  filter(fiscal_year  %in% c(1995:2018)) %>%
+  filter(fiscal_year  %in% c(1998:2019)) %>%
   filter(agency_name %in% c("Department of Agriculture",
   "Department of Defense--Military Programs",
-  "Department of Education", 
-  "Department of Health and Human Services",
+  "Department of Education",
   "Department of Homeland Security",
-  "Department of Housing and Urban Development", "Department of Labor", "Department of the Treasury", "Department of Transportation", "Department of Veterans Affairs"))
+  "Department of Labor", "Department of the Treasury", "Department of Veterans Affairs", "Department of Homeland Security"))
 	      
 facet_plot <- facet_data %>% ggplot(aes(x = fiscal_year, y = dollars_thousands, fill = agency_name)) +
   geom_histogram(stat = "sum") + 
   facet_wrap(~agency_name) +
-  scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) +
+  scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
 
   labs(title = "Selected Departmental Outlays Since 1995",
-       subtitle = "Some agencies, like the Dept of Defense and the Treasury, have experienced significant shifts in outlays since 1995.",
+       subtitle = "Some agencies, like the Dept of Defense and the Treasury,\n have experienced significant shifts in outlays since 1995.",
        caption="Source: United States. Office of Management and Budget. Public Budget Database.",
        x = "Fiscal Year",
-       y = "Outlays In Thousands of US Dollars ") + 
+       y = "Outlays In Thousands of US Dollars ") + theme1 +
        
   theme(axis.text.x = element_text(angle = 90),
         strip.text = element_text(face = "plain", 
-        size = rel(0.9)),
-        plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
-        plot.subtitle = element_text(color="black", size=12, hjust =0.5),
-        axis.title.x = element_text(color="black", size=14),
-        axis.title.y = element_text(color="black", size=14),
-        plot.caption = element_text(color="black", size=8, face="italic"),
-        legend.position="none"
-        )
+                                  size = rel(0.9)),
+        legend.position="none") 
 
 ggsave(filename = 'visuals/Outlays_Since1995_FacetWrap.pdf', width = 11, height = 8.5)
 last_plot()
@@ -206,40 +204,29 @@ last_plot()
 
 <br><br>
 
-# Plot 3: Federal Government Outlays by Agency By Year
-* Use the same outlays dataset. 
-* I take the federal government outlays dataset and choose the top 8 departments by total amount spent over the last 9 years.
-* Limit the years to just the last 9 so that the point plot is comprehensible. 
-* Group by agency name and fiscal year. 
+# Plot 3: Federal Government Outlays Projected into the future
 
+The plan is to highlight some agencies, big or small, that are projected to have large changes in their budget in the next five years. 
 ```{r}
 outlay_agency <- outlays %>%
-  filter(agency_name %in% c("Social Security Administration","Department of Health and Human Services",
-                            "Department of Defense--Military Programs", "Department of Agriculture", 
-                            "Department of Veterans Affairs", "Department of Labor")) %>% 
+  filter(agency_name %in% c( "Department of Veterans Affairs",
+                             "Department of Labor",
+                             "")) %>% 
 	
-	filter(fiscal_year %in% c(2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018)) %>%
+	filter(fiscal_year %in% c(2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023)) %>%
 	
   group_by(agency_name, fiscal_year) %>%
   summarize(dollars_thousands = sum(dollars_thousands)) 
   
       outlay_agency %>% ggplot(aes(x = fiscal_year, y = (dollars_thousands), color = agency_name, group=agency_name)) +
-      geom_point() + geom_line() + ggpubr::rotate_x_text() + theme(legend.position="none") +
-      scale_y_log10(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
-        
-        labs(title = "Since the Recession, Departments Have Had Drastically Different Treatment",
-          subtitle = "Labor's stimulus funding was short-lived, and DoD's expenditures decrerased as wars winded down",
+      geom_point() + geom_line() + ggpubr::rotate_x_text() + 
+      scale_y_continuous(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
+        theme1 +
+        labs(title = "Projected Changes in Selected Departments/Agencies",
+          subtitle = "Labor's stimulus funding was short-lived,\n and DoD's expenditures decrerased as wars winded down",
           caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
           x = "Year",
-          y = "Outlays (Thousands of US Dollars)" +              
-            
-          theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
-              plot.subtitle = element_text(color="black", size=12, hjust =0.5),
-              axis.title.x = element_text(color="black", size=14, angle = 90),
-              axis.title.y = element_text(color="black", size=14),
-              plot.caption = element_text(color="black", size=8, face="italic")
-              )
-        )
+          y = "Outlays (Thousands of US Dollars)")
 ggsave(filename = 'visuals/AgencyOutlaysSince2010.pdf', width = 11, height = 8.5)
 last_plot()
 ```
@@ -248,7 +235,7 @@ last_plot()
 
 ## Plot 4: Discretionary vs Mandatory at the Agency Level
 
-I don't like this plot and I'm going to get rid of it. ¯\_(ツ)_/¯
+I'm still not quite sure what to do with this graphic. I need to clean it up, obviously.
 
 ```{r, echo=FALSE}
 spendtype <- budget_longform %>% filter(fiscal_year %in% c(2018)) %>% filter(expenditure > 0) %>% select(fiscal_year, `Agency Name`, `BEA Category`, `Grant/non-grant split`, expenditure) %>%
@@ -265,21 +252,18 @@ v2_spendtype <- mutate(.data = v2_spendtype,  net_interest = coalesce(net_intere
 v2_spendtype <- mutate(.data = v2_spendtype,  prop_mandatory = coalesce(prop_mandatory, 0))
 v2_spendtype <- mutate(v2_spendtype, total_spend = discretionary +  mandatory + net_interest)
 
-ggplot(data=v2_spendtype, aes(x = mandatory, y=discretionary)) + 
+discvmadn <- ggplot(data=v2_spendtype, aes(x = mandatory, y=discretionary)) + 
     geom_point(aes(size=total_spend, color=prop_mandatory)) + 
     scale_y_log10(name = "Mandatory Outlays (2018)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) + 
     scale_x_log10(name = "Discretionary Outlays (2018)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) + 
     
-    labs(title = "Top Spending Agencies Have a Mix of Discretionary and Mandatory Spending",
-         subtitle = "The DOD is one of the largest discretionary outlays, while HHS is one of the largerst mandatory outlays",
-         caption = "Source: United States. Office of Management and Budget. Public Budget Database." +  
-             theme(plot.title = element_text(color="black", size=18, face="bold", hjust = 0.5),
-                   axis.title.x = element_text(color="black", size=18), axis.text.x = element_text(angle = 90, hjust = 1),
-                   axis.title.y = element_text(color="black", size=18)))+ 
-    
-    geom_text(size=2, aes(label=ifelse(mandatory>0 & discretionary > 0, as.character(agency_name),''), hjust=0, vjust=0)) + 
-    
-    scale_colour_gradient2(low = "red", mid = "white", high = "blue", midpoint = .5, space = "Lab", na.value = "grey50", guide = "colourbar", aesthetics = "colour")
+    labs(title = "Top Spending Agencies Have a Mix of\n Discretionary and Mandatory Spending",
+         subtitle = "The DOD is one of the largest discretionary outlays,\n while HHS is one of the largerst mandatory outlays",
+         caption = "Source: United States. Office of Management and Budget. Public Budget Database.") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  + theme1 +
+  geom_text(size=2, aes(label=ifelse(mandatory>0 & discretionary > 0, as.character(agency_name),''), hjust=0, vjust=0)) + 
+           scale_colour_gradient2(low = "red", mid = "white", high = "blue", midpoint = .5, space = "Lab", na.value = "grey50", 
+                                  guide = "colourbar", aesthetics = "colour")
 
 ggsave(filename = 'visuals/Proportion_Mandatory_2018.pdf', width = 11, height = 8.5)
 last_plot()
@@ -287,7 +271,7 @@ last_plot()
 
 
 
-## Plot 5: Share of Spending Over Time  
+## Spending Over Time  
 The share of federal spending classified as mandatory has grown as a percentage of total spending since the 1960s. 
 
 Mandatory spending is spending controlled by laws other than annual appropriations acts. This spending has been mandated by Congress in the past and does does have to be reappropriated each year. Most mandatory programs are fall under health care (e.g. Medicare, Medicaid), social security, and other income support programs. Spending on mandatory programs is determined by the number of eligible recipients. 
@@ -303,35 +287,40 @@ type_over_time <- budget_longform %>% select(fiscal_year, `BEA Category`, expend
 #type_over_time <- type_over_time %>% mutate(prop_mand = mandatory/total_spend)
 #type_over_time <- type_over_time %>% mutate(prop_int = net_interest/total_spend)
 
-ShareOfSpending <- type_over_time %>% group_by(fiscal_year) %>% ggplot(aes(x=fiscal_year, y=n, color=`BEA Category`, fill=`BEA Category`)) +
+ShareOfSpending <- type_over_time %>% group_by(fiscal_year) %>% filter(!fiscal_year %in% c(2019, 2020, 2021, 2022, 2023)) %>% 
+  ggplot(aes(x=fiscal_year, y=n, color=`BEA Category`, fill=`BEA Category`)) +
     geom_area(position = "fill", aes(group=`BEA Category`), color = "black") + 
   scale_y_continuous(expand = c(0, 0), labels = scales::percent_format(), breaks = seq(0,1,by=.2)) + 
     geom_line(color = "black", position = "fill", aes(group=`BEA Category`)) + 
-    scale_x_discrete(expand = c(0,0), breaks=(seq(1962,2018,2)), 
-                     labels = (seq(1962,2018,2))) +
+    scale_x_discrete(expand = c(0,0), breaks=(seq(1962,2018,4)), 
+                     labels = (seq(1962,2018,4))) +
     scale_fill_brewer(palette="Set2") + 
   
   labs(title = "Mandatory Spending Has Accounted for a \n Larger and Larger Share of the Federal Budget",
          subtitle = "",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
          x = "Year",
-         y = "Proportion of Federal Budget") +  
+         y = "Proportion of Federal Budget") + theme1 + 
   
-    theme(plot.title = element_text(color="black", size=18, face="bold", hjust = 0.5),
-          axis.title.x = element_text(color="black", size=18), axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
-          axis.title.y = element_text(color="black", size=18), axis.text.y = element_text(size = 12),
+    theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
+          axis.text.y = element_text(size = 12),
           legend.background = element_rect(fill="lightblue",
-                                         size=0.5, linetype="solid", 
+                                         size=1, linetype="solid", 
                                          colour ="black"),
           panel.background = element_rect(fill = NA, size = .2),
-          panel.ontop = TRUE)
+          panel.ontop = TRUE, legend.position=c(.8, .4))
 
 ggsave(filename = 'visuals/ShareOfSpending.pdf', width = 11, height = 8.5)
 ShareOfSpending
 ```
 
 
-# Revenues
+# Revenues Over Time
+
+The federal government can borrow money, or collect taxes/revenues to finance its activities. Revenues can be collected from individuals or businesses, through fees, sales taxes, profit taxes, payroll taxes, or through tariffs- taxes on foreign goods. 
+
+Since 1962, the proportion of revenue collected through payroll taxes and individual income taxes has increased substantially. The proportion of revenues collected through the corporate income tax and excise taxes (sales taxes, such as the federal gasoline tax) has fallen. The share of revenue from payroll taxes has increased from about 20% of revenues in 1962, to about 35% in 2018. Individual income taxes have gone from a little over 40% of revenues to almost 50% of all federal revenue. 
+
 ```{r Revenues Over Time, echo=FALSE}
 rev_colnames <- c("Category Code", "Category Name", "Subcategory Code", "Subcategory Name", "Agency Code", "Agency Name", "Bureau Code", "Bureau Name", "Account Code", "Account Name", "Treasury Agency Code", "On/Off Budget")
 
@@ -347,20 +336,19 @@ temp <- rev_long %>% group_by(`Category Name`, fiscal_year) %>% select(fiscal_ye
   summarize(sum=sum(expenditure))
 temp2 <- filter(temp, `Category Name` != 'Legislative Proposals' & fiscal_year != 'TQ' & !fiscal_year %in% c(2019, 2020, 2021, 2022, 2023))
 
-labsrev <-   labs(title = "Something Interesting About Federal Government Revenues",
-         subtitle = "",
+labsrev <-   labs(title = "Less Reliance On Corporate Taxes, More Payroll Taxes",
+         subtitle = "With An Assist From Individual Income Taxes",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
          x = "Fiscal Year",
          y = "Proportion of Federal Revenues")
 
-themerev <- theme(plot.title = element_text(color="black", size=18, face="bold", hjust = 0.5),
-                  axis.title.x = element_text(color="black", size=18), axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
-                  axis.title.y = element_text(color="black", size=18), axis.text.y = element_text(size = 12),
-                  legend.background = element_rect(fill="lightblue",
-                                                   size=0.5, linetype="solid", 
-                                                   colour ="black"),
-                  panel.background = element_rect(fill = NA, size = .2),
-                  panel.ontop = TRUE)
+themerev <- theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
+                  axis.text.y = element_text(size = 12),
+          legend.background = element_rect(fill="lightblue",
+                                         size=1, linetype="solid", 
+                                         colour ="black"),
+          panel.background = element_rect(fill = NA, size = .2),
+          panel.ontop = TRUE, legend.position=c(.8, .4))
 
 rev_share <- temp2 %>% 
   ggplot(aes(x=fiscal_year, y=`sum`, color=`Category Name`, fill=`Category Name`)) +
@@ -371,7 +359,7 @@ rev_share <- temp2 %>%
                    labels = (seq(1962,2023,4))) +
   scale_fill_brewer(palette="Set2") + 
   labsrev +  
-  themerev 
+  themerev + theme1
 
 ggsave(filename = 'visuals/ShareOfRevenue.pdf', width = 11, height = 8.5)
 ggsave(filename = 'visuals/ShareOfRevenue.png', width = 11, height = 8.5)
