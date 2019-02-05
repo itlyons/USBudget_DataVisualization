@@ -20,6 +20,7 @@ library(ggpubr)
 library(formatR)
 library(tinytex)
 library(scales)
+library(ggthemes)
 library(extrafont)
 ```
 
@@ -43,13 +44,16 @@ tax_long$FY2019_to_2028 <- NULL
 ```
 
 ```{r Define my Theme}
-theme1 <- theme(plot.title = element_text(color="black", size=22, face="bold", hjust = 0.5),
-                plot.subtitle = element_text(color="black", size=18, hjust =0.5),
-                axis.title.x = element_text(color="black", size=18),
-                axis.title.y = element_text(color="black", size=18),
-                plot.caption = element_text(color="black", size=12, face="italic"),
+theme1 <- theme(plot.title = element_text(color="black", size=20, face="bold", hjust = 0.5, family="Verdana"),
+                text = element_text(family="Courier New"),
+                plot.subtitle = element_text(color="#4c4e4d", size=16, hjust =0.5),
+                axis.title.x = element_text(color="black", size=18, family="Verdana"),
+                axis.title.y = element_text(color="black", size=18, family="Verdana"),
+                plot.caption = element_text(color="black", size=10, face="italic"),
                 plot.background=element_rect(fill="#f7f7f7"),
-                panel.grid.minor.y = element_blank())
+                panel.background =element_rect(fill="#f7f7f7"),
+                panel.grid.minor.y = element_blank(),
+                axis.line = element_line(size=1, color = "Black"))
 ```
 ## Largest Tax Expenditures By Category
 Tax expenditures are what we usually refer to as tax loopholes or tax breaks. The US Department of Treasury classifies these tax provisions as tax "expenditures" in recognition of the fact that they are "often viewed as alternatives to other policy instruments, such as spending or regulatory programs" ([Treasury](https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures)). 
@@ -72,12 +76,13 @@ bar_to_plot <- ggplot(data=top7, aes(x=reorder(Category, -amount_billions), y=am
   geom_col(position = "dodge", color="black")
 
 plot1 <- bar_to_plot + 
-    scale_y_continuous( name = "Tax Expenditures in Billions of Dollars", 
+    scale_y_continuous(expand = c(0,0),
+                       name = "Tax Expenditures in Billions of Dollars", 
                        labels = scales::dollar_format(accuracy = 1, suffix = 'B')) + 
     scale_x_discrete() + 
     scale_fill_brewer(palette="Set2") +
   
-    labs(title = "The United States spends trillions of dollars on tax loopholes each year", 
+    labs(title = "The United States spends trillions \nof dollars on tax loopholes each year", 
          subtitle = "US Federal Government Tax Expenditures In 2018",
          caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n * These estimates are made relative to current law as of July 1, 2018", 
          x = "Category of Tax Break") + theme1 + theme(legend.position="none", axis.text.x = element_blank()) + 
@@ -110,15 +115,15 @@ details <- c("Exclusion of employer health care contributions", "Capital gains (
 
 
 
-descr <- labs(title = "The Employer Health Care Deduction Dwarves Other Tax Breaks", 
-              subtitle = "Investment & Housing Tax Breaks Make Up 5/10 of the Most Expensive Tax Breaks",
+descr <- labs(title = "The Employer Health Care Deduction\nDwarfs Other Tax Breaks", 
+              subtitle = "Investor & Housing Tax Breaks Are 5/10 of the Most Expensive Tax Breaks",
               caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n 
               * These estimates are made relative to current law as of July 1, 2018", 
               x = "Description of Tax Break")
 
 expend_plot <- ggplot(data=top10, aes(x=reorder(details, expenditure), y=expenditure, color=Category, fill=Category)) + 
   geom_col(color="black") + coord_flip() +
-  scale_y_continuous(expand = c(0,0), name = "Tax Expenditures in Billions of Nominal Dollars", 
+  scale_y_continuous(expand = c(0,0), name = "Size of Tax Break in Dollars", 
                 labels = scales::dollar_format(scale = .001, accuracy = 1, suffix = 'B')) + 
   scale_x_discrete(labels = scales::wrap_format(18)) + 
   scale_fill_brewer(palette="Set2") + 
@@ -210,20 +215,20 @@ The plan is to highlight some agencies, big or small, that are projected to have
 ```{r}
 outlay_agency <- outlays %>%
   filter(agency_name %in% c( "Department of Veterans Affairs",
-                             "Department of Labor",
-                             "")) %>% 
+                             "National Endowment for the Humanities",
+                             "Corporation for National and Community Service")) %>% 
 	
 	filter(fiscal_year %in% c(2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023)) %>%
 	
   group_by(agency_name, fiscal_year) %>%
   summarize(dollars_thousands = sum(dollars_thousands)) 
   
-      outlay_agency %>% ggplot(aes(x = fiscal_year, y = (dollars_thousands), color = agency_name, group=agency_name)) +
+projected <-  outlay_agency %>% ggplot(aes(x = fiscal_year, y = (dollars_thousands), color = agency_name, group=agency_name)) +
       geom_point() + geom_line() + ggpubr::rotate_x_text() + 
-      scale_y_continuous(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
+      scale_y_log10(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
         theme1 +
         labs(title = "Projected Changes in Selected Departments/Agencies",
-          subtitle = "Labor's stimulus funding was short-lived,\n and DoD's expenditures decrerased as wars winded down",
+          subtitle = "Labor's stimulus funding was short-lived,\n and DoD's expenditures decreased as wars winded down",
           caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
           x = "Year",
           y = "Outlays (Thousands of US Dollars)")
@@ -348,7 +353,7 @@ themerev <- theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
                                          size=1, linetype="solid", 
                                          colour ="black"),
           panel.background = element_rect(fill = NA, size = .2),
-          panel.ontop = TRUE, legend.position=c(.8, .4))
+          panel.ontop = TRUE, legend.position=c(.8, .6))
 
 rev_share <- temp2 %>% 
   ggplot(aes(x=fiscal_year, y=`sum`, color=`Category Name`, fill=`Category Name`)) +
