@@ -60,7 +60,7 @@ Tax expenditures are what we usually refer to as tax loopholes or tax breaks. Th
 
 In the United States, many policies act though the tax code rather than through fiscal policy. For instance, other developed nations generally provide health care and/or health insurance for all of their citizens directly though national insurance/medical programs. However, in the United States most people receive insurance through their employer, perhaps not even realizing the generous tax treatment they and their employer are receiving.
 
-```{r Top 7 2018 Tax Expenditures}
+```{r Top 7 2018 Tax Expenditures, message=FALSE, warning=FALSE}
 time_series <- tax_long %>% select(fiscal_year, Category, expenditure) %>% filter(fiscal_year %in% c(2018)) %>% 
   group_by(fiscal_year, Category) %>% tally(expenditure)
 
@@ -106,7 +106,7 @@ last_plot()
 ## The largest individual tax expenditures  
 Looking at the largest individual tax breaks, it is easy to see the hidden cost of the American approach to health care policy. The deduction for premiums for employer-sponsored health care plans alone costs over $205 billion a year, according to the Department of Treasury. This deduction has also been blamed for pushing up health care spending in general by encouraging more generous plans with lower cost-sharing and [less managed care.](https://www.taxpolicycenter.org/briefing-book/how-does-tax-exclusion-employer-sponsored-health-insurance-work).
 
-```{r Top Tax Expenditures}
+```{r Top Tax Expenditures, message=FALSE}
 taxex <- filter(tax_long, fiscal_year == 2018)
 top10 <- top_n(taxex, 10)
 top10 <- arrange(top10, -expenditure)
@@ -174,7 +174,7 @@ Note: I need to figure out how to add recession shading and add some events, suc
 Departments have received differing treatment over the past two decades depending on presidential priorities and world events. We can see the effects of the recession on the highlighted departments. The Department of Treasury, whose outlays usually consist of interest payments, had to massively increase its expenditures in the depths of the financial crisis. The Department of Agriculture saw a stubborn increase in its outlays due to increased usage of SNAP, more commonly known as the food stamp program.  
 
 The September 11th 2001 terrorist attacks and the subsequent invasions of Afghanistan and Iraq saw Department of Defense Expenditures soar, until hostilities started to wind down in 2010 or so. The Department of Homeland Security, founded in 2002, has consistently received \$50-\$100 billion per year. The increase in 2018 funding for both departments is a reflection of the Trump administration's priorities.
-```{r Facetwrap 1995-2018}
+```{r Facetwrap 1995-2018, message=FALSE, warning=FALSE}
 # Filter to the fiscal years 1995 to 2018.
 # Filter to only the 12 agencies/departments with the largest budgets.
 
@@ -225,7 +225,7 @@ outlay_agency <- outlays %>%
   
 projected <-  outlay_agency %>% ggplot(aes(x = fiscal_year, y = (dollars_thousands), color = agency_name, group=agency_name)) +
       geom_point() + geom_line() + ggpubr::rotate_x_text() + 
-      scale_y_log10(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
+      scale_y_log10(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) +
         theme1 +
         labs(title = "Projected Changes in Selected Departments/Agencies",
           subtitle = "Labor's stimulus funding was short-lived,\n and DoD's expenditures decreased as wars winded down",
@@ -242,7 +242,7 @@ last_plot()
 
 I'm still not quite sure what to do with this graphic. I need to clean it up, obviously.
 
-```{r, echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 spendtype <- budget_longform %>% filter(fiscal_year %in% c(2018)) %>% filter(expenditure > 0) %>% select(fiscal_year, `Agency Name`, `BEA Category`, `Grant/non-grant split`, expenditure) %>%
     group_by(fiscal_year, `Agency Name`, `BEA Category`) %>%
     tally(expenditure)
