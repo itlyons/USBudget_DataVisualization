@@ -291,21 +291,17 @@ Discretionary spending must be appropriated each year by the House and Senate. T
 ```{r Share of Spending, echo=FALSE}
 type_over_time <- budget_longform %>% select(fiscal_year, `BEA Category`, expenditure) %>% filter(fiscal_year != 'TQ') %>% group_by(fiscal_year, `BEA Category`) %>% tally(expenditure) 
 
-#colnames(type_over_time) <- c('fiscal_year', 'discretionary', 'mandatory', 'net_interest')
-#type_over_time <- type_over_time %>% mutate(total_spend = discretionary + mandatory + net_interest)
-#type_over_time <- type_over_time %>% mutate(prop_disc = discretionary/total_spend)
-#type_over_time <- type_over_time %>% mutate(prop_mand = mandatory/total_spend)
-#type_over_time <- type_over_time %>% mutate(prop_int = net_interest/total_spend)
+spend_overtime <- type_over_time %>% group_by(fiscal_year) %>% filter(!fiscal_year %in% c(2019, 2020, 2021, 2022, 2023))
+rm(type_over_time)
 
-ShareOfSpending <- type_over_time %>% group_by(fiscal_year) %>% filter(!fiscal_year %in% c(2019, 2020, 2021, 2022, 2023)) %>% 
+ShareOfSpending <-  spend_overtime %>% 
   ggplot(aes(x=fiscal_year, y=n, color=`BEA Category`, fill=`BEA Category`)) +
     geom_area(position = "fill", aes(group=`BEA Category`), color = "black") + 
   scale_y_continuous(expand = c(0, 0), labels = scales::percent_format(), breaks = seq(0,1,by=.2)) + 
     geom_line(color = "black", position = "fill", aes(group=`BEA Category`)) + 
     scale_x_discrete(expand = c(0,0), breaks=(seq(1962,2018,4)), 
                      labels = (seq(1962,2018,4))) +
-    scale_fill_brewer(palette="Set2") + 
-  
+  scale_fill_manual("Bureau of Economic Analysis\nSpending Category", values = brewer.pal(7, "Dark2")) +  
   labs(title = "Mandatory Spending Has Accounted for a \n Larger and Larger Share of the Federal Budget",
          subtitle = "",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
@@ -371,7 +367,7 @@ rev_share <- temp2 %>%
   scale_x_discrete(expand = c(0,0), 
                    breaks=(seq(1962,2023,4)), 
                    labels = (seq(1962,2023,4))) +
-  scale_fill_manual("Bureau of Economic Analysis", values = brewer.pal(7, "Dark2")) +
+  scale_fill_manual("Bureau of Economic Analysis\nRevenue Category", values = brewer.pal(7, "Dark2")) +
   labsrev + 
   theme1 +
   themerev
