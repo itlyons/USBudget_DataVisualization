@@ -22,6 +22,7 @@ library(tinytex)
 library(scales)
 library(ggthemes)
 library(extrafont)
+library(RColorBrewer)
 ```
 
 ## Sourcing
@@ -44,6 +45,10 @@ tax_long$FY2019_to_2028 <- NULL
 ```
 
 ```{r Define my Theme}
+custom_pal <- c("#4DCCBF", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D", "#CC7776", "#FFF07A")
+
+# These colors are from the brewer 'Dark2' palette
+bea_palette <- c("Commerce and housing" = "#1B9E77", "Income security" = "#D95F02", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
 theme1 <- theme(plot.title = element_text(color="black", size=20, face="bold", hjust = 0.5, family="Verdana"),
                 text = element_text(family="Courier New"),
                 plot.subtitle = element_text(color="#4c4e4d", size=16, hjust =0.5),
@@ -67,27 +72,13 @@ time_series <- tax_long %>% select(fiscal_year, Category, expenditure) %>% filte
 time_series <- mutate(.data = time_series, amount_billions = n/1000)
 time_series$n <- NULL
 time_series <- arrange(time_series, -amount_billions)
-tax_col_names <- c("Commerce & Housing", "Income Security", "Health", "Education, Training, Employment, and Social Services", "International Affairs", "Aid to State & Local Governments", "Fiscal Assistance")
-
 top7 <- top_n(time_series, 7)
 
 
-bar_to_plot <- ggplot(data=top7, aes(x=reorder(Category, -amount_billions), y=amount_billions, color=Category, fill=Category)) + 
+bar_to_plot <- ggplot(data=top7, aes(x=reorder(Category, -amount_billions), y=amount_billions, fill=Category)) + 
   geom_col(position = "dodge", color="black")
 
-plot1 <- bar_to_plot + 
-    scale_y_continuous(expand = c(0,0),
-                       name = "Tax Expenditures in Billions of Dollars", 
-                       labels = scales::dollar_format(accuracy = 1, suffix = 'B')) + 
-    scale_x_discrete() + 
-    scale_fill_brewer(palette="Set2") +
-  
-    labs(title = "The United States spends trillions \nof dollars on tax loopholes each year", 
-         subtitle = "US Federal Government Tax Expenditures In 2018",
-         caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n * These estimates are made relative to current law as of July 1, 2018", 
-         x = "Category of Tax Break") + theme1 + theme(legend.position="none", axis.text.x = element_blank()) + 
-  
-  geom_text(aes(label= c("\n\n\n\n\n\n\n\nCommerce\nand\nhousing", 
+labelling <-geom_text(aes(label= c("\n\n\n\n\n\n\n\nCommerce\nand\nhousing", 
                          "\n\nIncome\nSecurity",
                          "\nHealth", 
                          "Education\nTraining\nEmployment",
@@ -95,6 +86,20 @@ plot1 <- bar_to_plot +
                          "State/\nLocal\nAid",
                          "Fisc.\nAss."), color="black", vjust=0.5),
             position = position_identity(), color="black")
+
+plot1 <- bar_to_plot + 
+    scale_y_continuous(expand = c(0,0),
+                       name = "Tax Expenditures in Billions of Dollars", 
+                       labels = scales::dollar_format(accuracy = 1, suffix = 'B')) + 
+    scale_x_discrete() + 
+    labs(title = "The United States spends trillions \nof dollars on tax loopholes each year", 
+         subtitle = "US Federal Government Tax Expenditures In 2018",
+         caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n * These estimates are made relative to current law as of July 1, 2018", 
+         x = "Category of Tax Break") + 
+  labelling +
+  theme1 + 
+  theme(legend.position="none", axis.text.x = element_blank()) +  
+  scale_fill_manual(values=bea_palette)
 
 ggsave(filename = 'visuals/BiggestCategoryOfBreaks.pdf', width = 11, height = 8.5)
 last_plot()
@@ -126,7 +131,7 @@ expend_plot <- ggplot(data=top10, aes(x=reorder(details, expenditure), y=expendi
   scale_y_continuous(expand = c(0,0), name = "Size of Tax Break in Dollars", 
                 labels = scales::dollar_format(scale = .001, accuracy = 1, suffix = 'B')) + 
   scale_x_discrete(labels = scales::wrap_format(18)) + 
-  scale_fill_brewer(palette="Set2") + 
+  scale_fill_manual(values=bea_palette) + 
   descr +
   theme1 + theme(legend.position=c(.8, .2))
 
