@@ -44,16 +44,17 @@ tax_long <- gather(base_df, fiscal_year, expenditure, '2018':'2028', factor_key=
 tax_long$FY2019_to_2028 <- NULL
 ```
 
-```{r Define my Theme}
+```{r Define My Theme}
 custom_pal <- c("#4DCCBF", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D", "#CC7776", "#FFF07A")
 
 # These colors are from the brewer 'Dark2' palette
 bea_palette <- c("Commerce and housing" = "#1B9E77", "Income security" = "#D95F02", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
-theme1 <- theme(plot.title = element_text(color="black", size=20, face="bold", hjust = 0.5, family="Verdana"),
-                text = element_text(family="Courier New"),
+
+iltheme <- theme(plot.title = element_text(color="black", size=20, face="bold", hjust = 0.5, family="Verdana"),
+                text = element_text(family="Courier New", size=10),
                 plot.subtitle = element_text(color="#4c4e4d", size=16, hjust=0.5, family = "Verdana"),
                 axis.title.x = element_text(color="black", size=18, family="Verdana"),
-                axis.title.y = element_text(color="black", size=18, family="Verdana"),
+                axis.title.y = element_text(color="black", size=18, family="Verdana"), 
                 plot.caption = element_text(color="black", size=10, face="italic"),
                 plot.background=element_rect(fill="#f7f7f7"),
                 panel.background =element_rect(fill="#f7f7f7"),
@@ -94,11 +95,12 @@ plot1 <- bar_to_plot +
     scale_x_discrete() + 
     labs(title = "The United States spends trillions \nof dollars on tax loopholes each year", 
          subtitle = "US Federal Government Tax Expenditures In 2018",
-         caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n * These estimates are made relative to current law as of July 1, 2018", 
+         caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures.\n*These estimates are made relative to current law as of July 1, 2018", 
          x = "Category of Tax Break") + 
   labelling +
-  theme1 + 
-  theme(legend.position="none", axis.text.x = element_blank()) +  
+  iltheme + 
+  theme(legend.position="none", 
+        axis.text.x = element_blank()) +  
   scale_fill_manual(values=bea_palette)
 
 ggsave(filename = 'visuals/BiggestCategoryOfBreaks.pdf', width = 11, height = 8.5)
@@ -126,14 +128,29 @@ descr <- labs(title = "The Employer Health Care Deduction\nDwarfs Other Tax Brea
               * These estimates are made relative to current law as of July 1, 2018", 
               x = "Description of Tax Break")
 
-expend_plot <- ggplot(data=top10, aes(x=reorder(details, expenditure), y=expenditure, color=Category, fill=Category)) + 
-  geom_col(color="black") + coord_flip() +
-  scale_y_continuous(expand = c(0,0), name = "Size of Tax Break in Dollars", 
-                labels = scales::dollar_format(scale = .001, accuracy = 1, suffix = 'B')) + 
+expend_plot <- ggplot(data=top10, 
+                      aes(x=reorder(details, expenditure), 
+                          y=expenditure, 
+                          color=Category, 
+                          fill=Category)) + 
+  geom_col(color="black") + 
+  coord_flip() +
+  scale_y_continuous(expand = c(0.005, 0), 
+                     name = "Size of Tax Break in Dollars", 
+                     labels = scales::dollar_format(scale = .001, accuracy = 1, suffix = 'B')
+                     ) + 
   scale_x_discrete(labels = scales::wrap_format(18)) + 
-  scale_fill_manual(values=bea_palette) + 
+  scale_fill_manual(name="Treasury-Assigned Category", 
+                    values=bea_palette
+                    ) + 
   descr +
-  theme1 + theme(legend.position=c(.8, .2))
+  iltheme + 
+  theme(legend.position =c(.8, .2), 
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        axis.text.x = element_text(size=14),
+        axis.text.y = element_text(size=10)
+        )
 
 ggsave(filename = 'visuals/BiggestIndividualBreaks.pdf', width = 13, height = 11)
 last_plot()
@@ -200,7 +217,7 @@ facet_plot <- facet_data %>% ggplot(aes(x = fiscal_year, y = dollars_thousands, 
        subtitle = "Some agencies, like the Dept of Defense and the Treasury,\n have experienced significant shifts in outlays since 1995.",
        caption="Source: United States. Office of Management and Budget. Public Budget Database.",
        x = "Fiscal Year",
-       y = "Outlays In Thousands of US Dollars ") + theme1 +
+       y = "Outlays In Thousands of US Dollars ") + iltheme +
        
   theme(axis.text.x = element_text(angle = 90),
         strip.text = element_text(face = "plain", 
@@ -231,7 +248,7 @@ outlay_agency <- outlays %>%
 projected <-  outlay_agency %>% ggplot(aes(x = fiscal_year, y = (dollars_thousands), color = agency_name, group=agency_name)) +
       geom_point() + geom_line() + ggpubr::rotate_x_text() + 
       scale_y_log10(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) +
-        theme1 +
+        iltheme +
         labs(title = "Projected Changes in Selected Departments/Agencies",
           subtitle = "Labor's stimulus funding was short-lived,\n and DoD's expenditures decreased as wars winded down",
           caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
@@ -270,7 +287,7 @@ discvmadn <- ggplot(data=v2_spendtype, aes(x = mandatory, y=discretionary)) +
     labs(title = "Top Spending Agencies Have a Mix of\n Discretionary and Mandatory Spending",
          subtitle = "The DOD is one of the largest discretionary outlays,\n while HHS is one of the largerst mandatory outlays",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))  + theme1 +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))  + iltheme +
   geom_text(size=2, aes(label=ifelse(mandatory>0 & discretionary > 0, as.character(agency_name),''), hjust=0, vjust=0)) + 
            scale_colour_gradient2(low = "red", mid = "white", high = "blue", midpoint = .5, space = "Lab", na.value = "grey50", 
                                   guide = "colourbar", aesthetics = "colour")
@@ -306,7 +323,7 @@ ShareOfSpending <-  spend_overtime %>%
          subtitle = "",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
          x = "Year",
-         y = "Proportion of Federal Budget") + theme1 + 
+         y = "Proportion of Federal Budget") + iltheme + 
   
     theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
           axis.text.y = element_text(size = 12),
@@ -369,7 +386,7 @@ rev_share <- temp2 %>%
                    labels = (seq(1962,2023,4))) +
   scale_fill_manual("Bureau of Economic Analysis\nRevenue Category", values = brewer.pal(7, "Dark2")) +
   labsrev + 
-  theme1 +
+  iltheme +
   themerev
 
 ggsave(filename = 'visuals/ShareOfRevenue.pdf', width = 11, height = 8.5)
