@@ -1,4 +1,5 @@
 # US Budget Data Visualization
+[The Latest](https://itlyons.github.io/USBudget_DataVisualization/ThemeAndDesign.html)
 This repository will contain detailed visualizations of US federal government spending and revenues over time. 
 
 I am interested in explaining the following topics:
@@ -13,4 +14,3 @@ Sources:
 * White House Office of Management and Budget  
 
 
-[The Latest](https://itlyons.github.io/USBudget_DataVisualization/ThemeAndDesign.html)
