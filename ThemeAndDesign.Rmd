@@ -51,7 +51,7 @@ custom_pal <- c("#4DCCBF", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D"
 bea_palette <- c("Commerce and housing" = "#1B9E77", "Income security" = "#D95F02", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
 theme1 <- theme(plot.title = element_text(color="black", size=20, face="bold", hjust = 0.5, family="Verdana"),
                 text = element_text(family="Courier New"),
-                plot.subtitle = element_text(color="#4c4e4d", size=16, hjust =0.5),
+                plot.subtitle = element_text(color="#4c4e4d", size=16, hjust=0.5, family = "Verdana"),
                 axis.title.x = element_text(color="black", size=18, family="Verdana"),
                 axis.title.y = element_text(color="black", size=18, family="Verdana"),
                 plot.caption = element_text(color="black", size=10, face="italic"),
@@ -344,6 +344,7 @@ theme2 <- theme(plot.title = element_text(color="black", size=18, face="bold", h
 
 temp <- rev_long %>% group_by(`Category Name`, fiscal_year) %>% select(fiscal_year, `Category Name`, expenditure) %>%
   summarize(sum=sum(expenditure))
+
 temp2 <- filter(temp, `Category Name` != 'Legislative Proposals' & fiscal_year != 'TQ' & !fiscal_year %in% c(2019, 2020, 2021, 2022, 2023))
 
 labsrev <-   labs(title = "Less Reliance On Corporate Taxes, More Payroll Taxes",
@@ -355,25 +356,28 @@ labsrev <-   labs(title = "Less Reliance On Corporate Taxes, More Payroll Taxes"
 themerev <- theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
                   axis.text.y = element_text(size = 12),
           legend.background = element_rect(fill="lightblue",
-                                         size=1, linetype="solid", 
-                                         colour ="black"),
+                                           size=1, 
+                                           linetype="solid", 
+                                           colour ="black"),
           panel.background = element_rect(fill = NA, size = .2),
-          panel.ontop = TRUE, legend.position=c(.8, .6))
+          panel.ontop = TRUE, legend.position=c(.8, .6)
+          )
 
 rev_share <- temp2 %>% 
   ggplot(aes(x=fiscal_year, y=`sum`, color=`Category Name`, fill=`Category Name`)) +
   geom_area(position = "fill", aes(group=`Category Name`), color = "black") + 
   scale_y_continuous(expand = c(0, 0), labels = scales::percent_format(), breaks = seq(0,1,by=.2)) + 
   geom_line(color = "black", position = "fill", aes(group=`Category Name`)) + 
-  scale_x_discrete(expand = c(0,0), breaks=(seq(1962,2023,4)), 
+  scale_x_discrete(expand = c(0,0), 
+                   breaks=(seq(1962,2023,4)), 
                    labels = (seq(1962,2023,4))) +
-  scale_fill_brewer(palette="Set2") + 
-  labsrev +  
-  themerev + theme1
+  scale_fill_manual("Bureau of Economic Analysis", values = brewer.pal(7, "Dark2")) +
+  labsrev + 
+  theme1 +
+  themerev
 
 ggsave(filename = 'visuals/ShareOfRevenue.pdf', width = 11, height = 8.5)
 ggsave(filename = 'visuals/ShareOfRevenue.png', width = 11, height = 8.5)
-
 
 rev_share
 ```
