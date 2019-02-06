@@ -45,10 +45,10 @@ tax_long$FY2019_to_2028 <- NULL
 ```
 
 ```{r Define My Theme}
-custom_pal <- c("#4DCCBF", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D", "#CC7776", "#FFF07A")
+custom_pal <- c("#3FC1C9", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D", "#CC7776", "#FFF07A")
 
 # These colors are from the brewer 'Dark2' palette
-bea_palette <- c("Commerce and housing" = "#1B9E77", "Income security" = "#D95F02", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
+bea_palette <- c("Commerce and housing" = "#3FC1C9", "Income security" = "#ED713A", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
 
 iltheme <- theme(plot.title = element_text(color="black", size=20, face="bold", hjust = 0.5, family="Verdana"),
                 text = element_text(family="Courier New", size=10),
@@ -56,8 +56,10 @@ iltheme <- theme(plot.title = element_text(color="black", size=20, face="bold", 
                 axis.title.x = element_text(color="black", size=18, family="Verdana"),
                 axis.title.y = element_text(color="black", size=18, family="Verdana"), 
                 plot.caption = element_text(color="black", size=10, face="italic"),
-                plot.background=element_rect(fill="#f7f7f7"),
-                panel.background =element_rect(fill="#f7f7f7"),
+                axis.text.x = element_text(size=14),
+                axis.text.y = element_text(size=12),
+                plot.background=element_rect(fill="#F0F0F0"),
+                panel.background =element_rect(fill="#F0F0F0"),
                 panel.grid.minor.y = element_blank(),
                 axis.line = element_line(size=1, color = "Black"))
 ```
@@ -149,7 +151,7 @@ expend_plot <- ggplot(data=top10,
         legend.text = element_text(size = 12),
         legend.title = element_text(size = 14),
         axis.text.x = element_text(size=14),
-        axis.text.y = element_text(size=10)
+        axis.text.y = element_text(size=9)
         )
 
 ggsave(filename = 'visuals/BiggestIndividualBreaks.pdf', width = 13, height = 11)
@@ -265,8 +267,16 @@ last_plot()
 I'm still not quite sure what to do with this graphic. I need to clean it up, obviously.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-spendtype <- budget_longform %>% filter(fiscal_year %in% c(2018)) %>% filter(expenditure > 0) %>% select(fiscal_year, `Agency Name`, `BEA Category`, `Grant/non-grant split`, expenditure) %>%
-    group_by(fiscal_year, `Agency Name`, `BEA Category`) %>%
+spendtype <- budget_longform %>% 
+  filter(fiscal_year %in% c(2018) & expenditure > 0) %>% 
+  select(fiscal_year, 
+         `Agency Name`, 
+         `BEA Category`, 
+         `Grant/non-grant split`, 
+         expenditure) %>%
+  group_by(fiscal_year, 
+           `Agency Name`, 
+           `BEA Category`) %>%
     tally(expenditure)
 
 v2_spendtype <- spread(spendtype, key = `BEA Category`, value = `n`)
@@ -279,18 +289,42 @@ v2_spendtype <- mutate(.data = v2_spendtype,  net_interest = coalesce(net_intere
 v2_spendtype <- mutate(.data = v2_spendtype,  prop_mandatory = coalesce(prop_mandatory, 0))
 v2_spendtype <- mutate(v2_spendtype, total_spend = discretionary +  mandatory + net_interest)
 
-discvmadn <- ggplot(data=v2_spendtype, aes(x = mandatory, y=discretionary)) + 
-    geom_point(aes(size=total_spend, color=prop_mandatory)) + 
-    scale_y_log10(name = "Mandatory Outlays (2018)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) + 
-    scale_x_log10(name = "Discretionary Outlays (2018)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) + 
-    
+discvmand <- ggplot(data=v2_spendtype, 
+                    aes(x = mandatory, 
+                        y=discretionary)) + 
+  geom_point(aes(size=total_spend, 
+                 color=prop_mandatory,
+                 ), position = position_jitter()) +
+  geom_abline(intercept = 0, slope = 1, linetype=2, color='#AFAFAF') +
+  scale_y_log10(name = "Mandatory Outlays (2018)", 
+                labels = scales::dollar_format(scale=.000001, 
+                                               accuracy = .01, 
+                                               suffix = 'B')) + 
+  scale_x_log10(name = "Discretionary Outlays (2018)", 
+                labels = scales::dollar_format(scale=.000001, 
+                                               accuracy = .01, 
+                                               suffix = 'B')) + 
     labs(title = "Top Spending Agencies Have a Mix of\n Discretionary and Mandatory Spending",
          subtitle = "The DOD is one of the largest discretionary outlays,\n while HHS is one of the largerst mandatory outlays",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))  + iltheme +
-  geom_text(size=2, aes(label=ifelse(mandatory>0 & discretionary > 0, as.character(agency_name),''), hjust=0, vjust=0)) + 
-           scale_colour_gradient2(low = "red", mid = "white", high = "blue", midpoint = .5, space = "Lab", na.value = "grey50", 
-                                  guide = "colourbar", aesthetics = "colour")
+  theme(axis.text.x = element_text(angle = 90, 
+                                   hjust = 1)) + 
+  iltheme +
+  geom_text(size=2, 
+            aes(label=ifelse(mandatory>10000 & discretionary > 10000, 
+                             as.character(agency_name),''), 
+                hjust=0, 
+                vjust=0)) + 
+  scale_color_gradient(low = '#66A61E', 
+                       high = '#E7298A',
+                       name="Proportion of Spending\nthat is Mandatory",
+                       labels = scales::percent_format(),  breaks = seq(0,1,by=.25)) +
+  scale_size_continuous(limits = c(0, 160000000),
+                        name = "Total Spending", 
+                        range = c(0,10), 
+                        labels = scales::dollar_format(scale=.000001, 
+                                               accuracy = .01, 
+                                               suffix = 'B'))
 
 ggsave(filename = 'visuals/Proportion_Mandatory_2018.pdf', width = 11, height = 8.5)
 last_plot()
@@ -382,8 +416,8 @@ rev_share <- temp2 %>%
   scale_y_continuous(expand = c(0, 0), labels = scales::percent_format(), breaks = seq(0,1,by=.2)) + 
   geom_line(color = "black", position = "fill", aes(group=`Category Name`)) + 
   scale_x_discrete(expand = c(0,0), 
-                   breaks=(seq(1962,2023,4)), 
-                   labels = (seq(1962,2023,4))) +
+                   breaks=(seq(1962,2018,4)), 
+                   labels = (seq(1962,2018,4))) +
   scale_fill_manual("Bureau of Economic Analysis\nRevenue Category", values = brewer.pal(7, "Dark2")) +
   labsrev + 
   iltheme +
