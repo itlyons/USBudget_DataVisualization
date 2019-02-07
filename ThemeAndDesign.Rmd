@@ -262,7 +262,7 @@ last_plot()
 
 
 
-## Plot 4: Discretionary vs Mandatory at the Agency Level
+## How is departmental and agency spending categorized?
 
 I'm still not quite sure what to do with this graphic. I need to clean it up, obviously.
 
@@ -289,43 +289,52 @@ v2_spendtype <- mutate(.data = v2_spendtype,  net_interest = coalesce(net_intere
 v2_spendtype <- mutate(.data = v2_spendtype,  prop_mandatory = coalesce(prop_mandatory, 0))
 v2_spendtype <- mutate(v2_spendtype, total_spend = discretionary +  mandatory + net_interest)
 
-discvmand <- ggplot(data=v2_spendtype, 
+discvmand <- ggplot(data = v2_spendtype, 
                     aes(x = mandatory, 
-                        y=discretionary)) + 
+                        y = discretionary)) + 
   geom_point(aes(size=total_spend, 
-                 color=prop_mandatory,
-                 ), position = position_jitter()) +
+                 color=prop_mandatory)) +
   geom_abline(intercept = 0, slope = 1, linetype=2, color='#AFAFAF') +
-  scale_y_log10(name = "Mandatory Outlays (2018)", 
+  scale_y_log10(name = "Discretionary Outlays (Log Scale)", 
                 labels = scales::dollar_format(scale=.000001, 
                                                accuracy = .01, 
                                                suffix = 'B')) + 
-  scale_x_log10(name = "Discretionary Outlays (2018)", 
+  scale_x_log10(name = "Mandatory Outlays (Log Scale)", 
                 labels = scales::dollar_format(scale=.000001, 
                                                accuracy = .01, 
                                                suffix = 'B')) + 
     labs(title = "Top Spending Agencies Have a Mix of\n Discretionary and Mandatory Spending",
-         subtitle = "The DOD is one of the largest discretionary outlays,\n while HHS is one of the largerst mandatory outlays",
+         subtitle = "The DOD is one of the largest discretionary outlays,\n while HHS is one of the largest mandatory outlays",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.") +
-  theme(axis.text.x = element_text(angle = 90, 
-                                   hjust = 1)) + 
   iltheme +
-  geom_text(size=2, 
-            aes(label=ifelse(mandatory>10000 & discretionary > 10000, 
+  theme(axis.text.x = element_text(angle = 90, 
+                                   hjust = 1), 
+  axis.line = element_line(size=0.1),   panel.border = element_blank(),
+  panel.grid.major.x = element_line(colour="#AFAFAF"),
+  panel.grid.major.y = element_line(colour="#AFAFAF"),
+  panel.grid.minor.x = element_line(colour="#AFAFAF"),
+  panel.grid.minor.y = element_line(colour="#AFAFAF")) + 
+  geom_text(size=1, 
+            aes(label=ifelse((mandatory>100000 & discretionary > 100000) | (mandatory > 1000000 | discretionary > 1000000), 
                              as.character(agency_name),''), 
                 hjust=0, 
                 vjust=0)) + 
+  geom_label(size=1, 
+            aes(label=ifelse((mandatory>100000 & discretionary > 100000) | (mandatory > 1000000 | discretionary > 1000000), 
+                             as.character(agency_name),''), 
+                hjust=0, 
+                vjust=0)) +
   scale_color_gradient(low = '#66A61E', 
                        high = '#E7298A',
                        name="Proportion of Spending\nthat is Mandatory",
-                       labels = scales::percent_format(),  breaks = seq(0,1,by=.25)) +
-  scale_size_continuous(limits = c(0, 160000000),
-                        name = "Total Spending", 
+                       labels = scales::percent_format(accuracy = 1),  breaks = seq(0,1,by=.25)) +
+  scale_size_continuous(name = "Total Spending", 
                         range = c(0,10), 
                         labels = scales::dollar_format(scale=.000001, 
-                                               accuracy = .01, 
-                                               suffix = 'B'))
-
+                                               accuracy = 1, 
+                                               suffix = 'B')) +
+ expand_limits(x = 1500000000,
+               y = 1500000000)
 ggsave(filename = 'visuals/Proportion_Mandatory_2018.pdf', width = 11, height = 8.5)
 last_plot()
 ```
