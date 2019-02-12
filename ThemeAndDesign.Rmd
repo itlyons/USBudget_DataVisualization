@@ -23,6 +23,7 @@ library(scales)
 library(ggthemes)
 library(extrafont)
 library(RColorBrewer)
+library(treemapify)
 ```
 
 ## Sourcing
@@ -198,32 +199,83 @@ Note: I need to figure out how to add recession shading and add some events, suc
 Departments have received differing treatment over the past two decades depending on presidential priorities and world events. We can see the effects of the recession on the highlighted departments. The Department of Treasury, whose outlays usually consist of interest payments, had to massively increase its expenditures in the depths of the financial crisis. The Department of Agriculture saw a stubborn increase in its outlays due to increased usage of SNAP, more commonly known as the food stamp program.  
 
 The September 11th 2001 terrorist attacks and the subsequent invasions of Afghanistan and Iraq saw Department of Defense Expenditures soar, until hostilities started to wind down in 2010 or so. The Department of Homeland Security, founded in 2002, has consistently received \$50-\$100 billion per year. The increase in 2018 funding for both departments is a reflection of the Trump administration's priorities.
-```{r Facetwrap 1995-2018, message=FALSE, warning=FALSE}
+```{r Facetwrap 1998-2018, message=FALSE, warning=FALSE}
 # Filter to the fiscal years 1995 to 2018.
 # Filter to only the 12 agencies/departments with the largest budgets.
 
-facet_data <- outlays %>%
+facet_data <- outlays %>% 
   filter(fiscal_year  %in% c(1998:2019)) %>%
   filter(agency_name %in% c("Department of Agriculture",
   "Department of Defense--Military Programs",
   "Department of Education",
   "Department of Homeland Security",
-  "Department of Labor", "Department of the Treasury", "Department of Veterans Affairs", "Department of Homeland Security"))
+  "Department of Labor", 
+  "Department of the Treasury", 
+  "Department of Veterans Affairs", 
+  "Department of Homeland Security", "Department of State", "Department of Justice"))
 	      
 facet_plot <- facet_data %>% ggplot(aes(x = fiscal_year, y = dollars_thousands, fill = agency_name)) +
-  geom_histogram(stat = "sum") + 
+    annotate(geom = 'rect', 
+             ymin = -Inf, 
+             ymax = Inf, 
+             xmin =10.917, 
+             xmax = 12.5, 
+             fill = 'red', 
+             alpha = 0.2) +
+    annotate(geom = 'rect', 
+             ymin = -Inf, 
+             ymax = Inf, 
+             xmin = 3.25,
+             xmax = 3.83, 
+             fill = 'red', 
+             alpha = 0.2) +
+  
+  annotate(geom = "segment", x = 3.75, xend = 3.75, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=3) +
+  annotate(geom = "text", x = 3.75, y = Inf, hjust=1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="9/11\nTerrorist\nAttacks", size=2) +
+  
+  annotate(geom = "segment", x = 5.22, xend = 5.22, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=3) +
+  annotate(geom = "text", x = 5.22, y = Inf, hjust=-.1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="Iraq War", size=2) +
+  
+  annotate(geom = "segment", x = 20.055, xend = 20.055, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=2) +
+  annotate(geom = "text", x = 20.055, y = Inf, hjust=-.1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="Donald Trump\nInaugurated", size=2) +
+  
+  annotate(geom = "segment", x = 12.055, xend = 12.055, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=2) +
+  annotate(geom = "text", x = 12.055, y = Inf, hjust=-.1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="Barack Obama\nInaugurated", size=2) +
+  geom_col() + 
   facet_wrap(~agency_name) +
-  scale_y_continuous(name = "Outlays (Thousands of US Dollars)", labels = scales::dollar_format(scale=.000001, accuracy = 1, suffix = 'B')) +
-
+  scale_y_continuous(name = "Outlays", 
+                     labels = scales::dollar_format(scale=.000001, 
+                                                    accuracy = 1, 
+                                                    suffix = 'B')) + 
+  scale_x_discrete( breaks=(seq(1998,2019,2)), 
+                   labels = (seq(1998,2019,2)) 
+                   ) +
   labs(title = "Selected Departmental Outlays Since 1995",
        subtitle = "Some agencies, like the Dept of Defense and the Treasury,\n have experienced significant shifts in outlays since 1995.",
        caption="Source: United States. Office of Management and Budget. Public Budget Database.",
        x = "Fiscal Year",
-       y = "Outlays In Thousands of US Dollars ") + iltheme +
+       y = "Outlays") + iltheme +
        
   theme(axis.text.x = element_text(angle = 90),
-        strip.text = element_text(face = "plain", 
-                                  size = rel(0.9)),
+        strip.text = element_text(face = "bold", 
+                                  size = rel(1.0)), 
+        axis.text = element_text(size=2),
         legend.position="none") 
 
 ggsave(filename = 'visuals/Outlays_Since1995_FacetWrap.pdf', width = 11, height = 8.5)
@@ -233,30 +285,40 @@ last_plot()
 
 <br><br>
 
-# Plot 3: Federal Government Outlays Projected into the future
+## Breakdown of Federal Spending (Top 8 Agencies/Departments by Outlays)
 
-The plan is to highlight some agencies, big or small, that are projected to have large changes in their budget in the next five years. 
-```{r}
-outlay_agency <- outlays %>%
-  filter(agency_name %in% c( "Department of Veterans Affairs",
-                             "National Endowment for the Humanities",
-                             "Corporation for National and Community Service")) %>% 
-	
-	filter(fiscal_year %in% c(2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023)) %>%
-	
-  group_by(agency_name, fiscal_year) %>%
-  summarize(dollars_thousands = sum(dollars_thousands)) 
-  
-projected <-  outlay_agency %>% ggplot(aes(x = fiscal_year, y = (dollars_thousands), color = agency_name, group=agency_name)) +
-      geom_point() + geom_line() + ggpubr::rotate_x_text() + 
-      scale_y_log10(name = "Outlays (Billions)", labels = scales::dollar_format(scale=.000001, accuracy = .01, suffix = 'B')) +
-        iltheme +
-        labs(title = "Projected Changes in Selected Departments/Agencies",
-          subtitle = "Labor's stimulus funding was short-lived,\n and DoD's expenditures decreased as wars winded down",
-          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
-          x = "Year",
-          y = "Outlays (Thousands of US Dollars)")
-ggsave(filename = 'visuals/AgencyOutlaysSince2010.pdf', width = 11, height = 8.5)
+
+```{r Treemap - 2017 Spending}
+
+top8agencies <- c("Department of Health and Human Services", "Social Security Administration", "Department of the Treasury", "Department of Defense--Military Programs", "Department of Veterans Affairs", "Other Defense Civil Programs", "Office of Personnel Management", "Department of Education")
+HHSonly <- budget_longform %>% filter(fiscal_year %in% c(2017) & `Agency Name` %in% top8agencies) 
+HHS <-  HHSonly %>% select(fiscal_year, `Agency Name`, `Bureau Name`, expenditure) %>% filter(expenditure > 1000000) %>% group_by(fiscal_year, `Agency Name`, `Bureau Name`) %>% summarise(exp=sum(expenditure))
+
+projected <-  HHS %>% ggplot(aes(area=exp,  
+                                 fill=`Agency Name`, 
+                                 label = `Bureau Name`, 
+                                 subgroup=`Agency Name`)) +
+  geom_treemap()  + 
+  iltheme +
+  geom_treemap_text(colour="white", 
+                    place="center", 
+                    grow = TRUE,
+                    reflow = TRUE,
+                    min.size = 1, 
+                    padding.x = grid::unit(unit="mm", 2), 
+                    padding.y=grid::unit(unit="mm", 2)) +
+  geom_treemap_subgroup_border(colour = "black", size = 1) +
+  theme(legend.position="bottom", legend.title = element_text(face = "bold", size=18)) +
+  scale_fill_brewer(palette = "Dark2", 
+                    labels = scales::wrap_format(16), 
+                    name="Agency/Dept") +
+  scale_size_area() +
+  labs(title = "Social Security, Medicare/Medicaid,\nand Interest on Debt Dominate the Budget",
+       subtitle = "Colors Correspond to Agencies, Smaller Boxes to Bureaus or Bureau Equivalents",
+       caption = "Source: United States. Office of Management and Budget. Public Budget Database.")
+
+ggsave(filename = 'visuals/sample.pdf', width = 11, height = 8.5)
+
 last_plot()
 ```
 
@@ -314,20 +376,16 @@ discvmand <- ggplot(data = v2_spendtype,
   panel.grid.major.y = element_line(colour="#AFAFAF"),
   panel.grid.minor.x = element_line(colour="#AFAFAF"),
   panel.grid.minor.y = element_line(colour="#AFAFAF")) + 
-  geom_text(size=1, 
+  geom_text(size=3, 
             aes(label=ifelse((mandatory>100000 & discretionary > 100000) | (mandatory > 1000000 | discretionary > 1000000), 
                              as.character(agency_name),''), 
-                hjust=0, 
+                hjust=0,
                 vjust=0)) + 
-  geom_label(size=1, 
-            aes(label=ifelse((mandatory>100000 & discretionary > 100000) | (mandatory > 1000000 | discretionary > 1000000), 
-                             as.character(agency_name),''), 
-                hjust=0, 
-                vjust=0)) +
   scale_color_gradient(low = '#66A61E', 
                        high = '#E7298A',
                        name="Proportion of Spending\nthat is Mandatory",
-                       labels = scales::percent_format(accuracy = 1),  breaks = seq(0,1,by=.25)) +
+                       labels = scales::percent_format(accuracy = 1),  
+                       breaks = seq(0,1,by=.25)) +
   scale_size_continuous(name = "Total Spending", 
                         range = c(0,10), 
                         labels = scales::dollar_format(scale=.000001, 
@@ -437,3 +495,12 @@ ggsave(filename = 'visuals/ShareOfRevenue.png', width = 11, height = 8.5)
 
 rev_share
 ```
+
+
+
+
+
+
+
+
+

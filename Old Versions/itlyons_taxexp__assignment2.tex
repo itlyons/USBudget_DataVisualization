@@ -1,0 +1,209 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdftitle={Intro to ggplot2 - Ian Lyons},
+            pdfauthor={Ian Lyons},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\newcommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{Intro to ggplot2 - Ian Lyons}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+    \author{Ian Lyons}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{1/20/2019}
+
+
+\begin{document}
+\maketitle
+
+\hypertarget{read-in-tax-expenditure-data-for-plot-1}{%
+\section{Read in tax expenditure data for Plot
+1}\label{read-in-tax-expenditure-data-for-plot-1}}
+
+Source for tax expenditures on the Treasury Department Website:
+\url{https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures}
+
+\begin{verbatim}
+base_df <- read_csv(file = 'tax_expenditures_18to28_renamed.csv')
+
+budg_2019 <- read_csv(file = 'outlays-fy2019.csv')
+\end{verbatim}
+
+\hypertarget{reshape-data-for-plot-1}{%
+\subsection{Reshape Data For Plot 1}\label{reshape-data-for-plot-1}}
+
+Create a long-form version of the tax expenditures dataset to use in a
+time-series plot. That is, create one row for each category, detail, and
+fiscal year. Then drop the cumulative `FY2019\_to\_2028' column since I
+won't be using it.
+
+\begin{verbatim}
+tax_long <- gather(base_df, fiscal_year, expenditure, '2018':'2028', factor_key=TRUE)
+tax_long$FY2019_to_2028 <- NULL
+\end{verbatim}
+
+\hypertarget{plot-1}{%
+\subsection{Plot 1}\label{plot-1}}
+
+\begin{verbatim}
+## Create a time-series dataset so that tax expenditures can be compared over the fiscal years included.  
+
+time_series <- tax_long %>% select(fiscal_year, Category, expenditure) %>%
+     group_by(fiscal_year, Category) %>%
+     tally(expenditure)
+
+## Convert the expenditure column to be in billions of dollars
+time_series <- mutate(.data = time_series, amount_billions = n/1000)
+time_series$n <- NULL
+bar_to_plot <- ggplot(data=time_series, aes(x=fiscal_year, y=amount_billions, color=Category)) + geom_col()
+
+plot1 <- bar_to_plot + 
+    scale_y_continuous(name = "Tax Expenditures in Billions of Nominal Dollars", labels =c('$0', '$433', '$866', '$1,300', '$1,733', '$2,166', '$2,600') 
+                       , breaks=c(0, 433, 866, 1300, 1733, 2166, 2600), limits = c(0,2600)) + 
+    
+    scale_x_discrete(name='Fiscal Year') + 
+    
+    labs(title = "US Federal Government Tax Expenditures, 2018-2028", 
+         subtitle = "The United States spends trillions of dollars on tax loopholes each year",
+         caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures \n 
+         * These estimates are made relative to current law as of July 1, 2018", 
+         x = "Fiscal Year" + 
+             
+             theme(plot.title = element_text(color="black", size=14, face="bold", hjust = 0.5),
+                   plot.subtitle = element_text(color="black", size=12, hjust =0.5),
+                   axis.title.x = element_text(color="black", size=10),
+                   axis.title.y = element_text(color="black", size=10),
+                   plot.caption = element_text(color="black", size=8, face="italic")
+                   )
+    )
+\end{verbatim}
+
+\n\n\n
+
+\hypertarget{plot-2-read-in-federal-budget-outlays-data}{%
+\section{Plot 2: Read in Federal Budget Outlays
+data}\label{plot-2-read-in-federal-budget-outlays-data}}
+
+Source for federal outlays on the Office of Management and Budget
+website: * \url{https://www.whitehouse.gov/omb/supplemental-materials/}
+
+\begin{verbatim}
+budg_2019 <- read_csv(file = 'outlays-fy2019.csv')
+\end{verbatim}
+
+\hypertarget{reshape-data-for-plot-2}{%
+\subsection{Reshape Data For Plot 2}\label{reshape-data-for-plot-2}}
+
+Create a long-form version of the outlays dataset to use in a
+time-series plot. That is, create one row for each line item (agency
+name, bureau name, account name, etc.) and fiscal year.
+
+\begin{verbatim}
+
+budget_longform <- gather(budg_2019, fiscal_year, expenditure, '1962':'2018', factor_key=TRUE)
+
+## Keep only descriptive column names rather than codes. 
+keep_cols <- c('Agency Name', 'Bureau Name', 'Account Name', 'Treasury Agency Code', 'Subfunction Title', 'BEA Category', 'Grant/non-grant split' , 'On- or Off- Budget', 'fiscal_year', 'expenditure')
+
+budget_longform <- budget_longform[keep_cols]
+\end{verbatim}
+
+\hypertarget{plot-2-group-by-agency-name-and-sum-expenditures-within-the-same-agency-and-year.}{%
+\subsection{Plot 2: Group by agency name and sum expenditures within the
+same agency and
+year.}\label{plot-2-group-by-agency-name-and-sum-expenditures-within-the-same-agency-and-year.}}
+
+\begin{verbatim}
+outlays <- budget_longform %>% select(fiscal_year, `Agency Name`, expenditure) %>%
+            group_by(fiscal_year, `Agency Name`) %>%
+            tally(expenditure)
+
+## Give the expenditures column a descriptive name          
+outlays <- mutate(.data = outlays, dollars_thousands = n)
+outlays$n <- NULL
+
+## Rename `Agency Name` in snake case.
+colnames(outlays)[2] <- 'agency_name'
+\end{verbatim}
+
+\hypertarget{plot-2-plot-the-thing}{%
+\subsection{Plot 2: Plot the thing!}\label{plot-2-plot-the-thing}}
+
+\begin{verbatim}
+ggplot(outlays, aes(x=fiscal_year, y=0)) + geom_point()
+\end{verbatim}
+
+
+\end{document}
