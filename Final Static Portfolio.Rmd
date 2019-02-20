@@ -23,6 +23,7 @@ library(rmarkdown)
 library(here)
 library(gghighlight)
 library(ggpubr)
+library(ggrepel)
 library(formatR)
 library(tinytex)
 library(scales)
@@ -66,7 +67,7 @@ custom_pal <- c("#3FC1C9", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D"
 # These colors are from the brewer 'Dark2' palette
 bea_palette <- c("Commerce and housing" = "#3FC1C9", "Income security" = "#ED713A", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
 
-iltheme <- theme(plot.title = element_text(color="black", size=22, face="bold", hjust = 0.5, family="Verdana"),
+iltheme <- theme(plot.title = element_text(color="black", size=22, face="bold", family="Verdana", hjust=0.5),
                 text = element_text(family="Courier New", size=14),
                 plot.subtitle = element_text(color="#4c4e4d", size=16, hjust=0.5, family = "Verdana"),
                 axis.title.x = element_text(color="black", size=20, family="Verdana"),
@@ -107,24 +108,373 @@ labelling <-geom_text(aes(label= c("\n\n\n\n\n\n\n\nCommerce\nand\nHousing",
                          "Education\nTraining\nEmployment",
                          "International\nAffairs", 
                          "State/\nLocal\nAid",
-                         "Fiscal\nAssistance"), color="black", vjust=0.5),
-            position = position_identity(), color="black")
+                         "Fiscal\nAssistance"), 
+                         color="black", 
+                         vjust=0.5),
+            position = position_identity(), 
+            color="black", size = 6)
 
 plot1 <- bar_to_plot + 
     scale_y_continuous(expand = c(0,0),
                        name = "Tax Expenditures in Billions of Dollars", 
                        labels = scales::dollar_format(accuracy = 1, suffix = 'B')) + 
     scale_x_discrete() + 
-    labs(title = "The United States spends trillions \nof dollars on tax loopholes each year", 
-         subtitle = "US Federal Government Tax Expenditures In 2018",
+    labs(title = "The United States Spends Trillions of Dollars on Tax Breaks Each Year", 
          caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures.\n*These estimates are made relative to current law as of July 1, 2018", 
          x = "Category of Tax Break") + 
   labelling +
   iltheme + 
   theme(legend.position="none", 
-        axis.text.x = element_blank()) +  
+        axis.text.x = element_blank(),
+        plot.title = element_text(color="black", size=20, face="bold", family="Verdana", hjust=0)) +  
   scale_fill_manual(values=bea_palette)
 
 ggsave(filename = 'visuals/BiggestCategoryOfBreaks.pdf', width = 11, height = 8.5)
 last_plot()
+```
+
+
+# The largest individual tax expenditures in 2018
+Looking at the largest individual tax breaks, it is easy to see the hidden costs of the American approach to health care policy. 
+
+The deduction for premiums for employer-sponsored health care plans alone costs over $205 billion a year, according to the Department of Treasury. This deduction has also been blamed for pushing up health care spending in general by encouraging more generous plans with lower cost-sharing and [less managed care.](https://www.taxpolicycenter.org/briefing-book/how-does-tax-exclusion-employer-sponsored-health-insurance-work)
+
+
+```{r Top Tax Expenditures, message=FALSE}
+taxex <- filter(tax_long, fiscal_year == 2018)
+top10 <- top_n(taxex, 10)
+top10 <- arrange(top10, -expenditure)
+
+details <- c("Employer health care exclusion", "Capital gains tax rate", "Treatment of net imputed rental income", "Defined contribution employer plans", "Employer pension plans", "Accelerated depreciation", "Reduced taxes on income of foreign corporations", "Step-up basis of capital gains", "Charitable contributions", "Capital gains exclusion- home sales")   
+
+descr <- labs(title = "The Employer Health Care Deduction Dwarfs Other Tax Breaks", 
+              subtitle = "Investor & Housing Tax Breaks Are Half of the Most Expensive Tax Breaks",
+              caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures. \n 
+              * These estimates are made relative to current law as of July 1, 2018", 
+              x = "Description of Tax Break")
+
+expend_plot <- ggplot(data=top10, 
+                      aes(x=reorder(details, expenditure), 
+                          y=expenditure, 
+                          color=Category, 
+                          fill=Category)) + 
+  geom_col(color="black") + 
+  coord_flip() +
+  scale_y_continuous(expand = c(0.005, 0), 
+                     name = "Size of Tax Break in Dollars", 
+                     labels = scales::dollar_format(scale = .001, 
+                                                    accuracy = 1, 
+                                                    suffix = 'B')
+                     ) + 
+  scale_x_discrete(labels = scales::wrap_format(18)) + 
+  scale_fill_manual(name="Treasury-Assigned Category", 
+                    values=bea_palette
+                    ) + 
+  descr +
+  iltheme + 
+  theme(legend.position =c(.8, .2), 
+        legend.text = element_text(size = 12),
+        legend.title = element_text(size = 14),
+        axis.text.x = element_text(size=14),
+        axis.text.y = element_text(size=12),
+        plot.title = element_text(color="black", size=20, face="bold", family="Verdana", hjust=0)
+        )
+
+ggsave(filename = 'visuals/BiggestIndividualBreaks.pdf', width = 13, height = 11)
+last_plot()
+```
+
+
+
+
+```{r}
+# Prep For Plots 2 & 3: Group by agency name and sum expenditures within the same agency and year.
+# * Create a long-form version of the outlays dataset to use in a time-series plot. That is, create one row for each line item (agency name, bureau name, account name, etc.) and fiscal year. 
+budget_longform <- gather(budg_2019, fiscal_year, expenditure, '1962':'2023', factor_key=TRUE)
+
+## Keep only descriptive column names rather than codes. 
+keep_cols <- c('Agency Name', 'Bureau Name', 'Account Name', 'Treasury Agency Code', 'Subfunction Title', 'BEA Category', 'Grant/non-grant split' , 'On- or Off- Budget', 'fiscal_year', 'expenditure')
+
+budget_longform <- budget_longform[keep_cols]
+```
+
+
+```{r}
+# Take the reshaped longform budget data and group by fiscal year and agency name. 
+
+outlays <- budget_longform %>% select(fiscal_year, `Agency Name`, expenditure) %>%
+			group_by(fiscal_year, `Agency Name`) %>%
+			tally(expenditure)
+
+## Give the expenditures column a descriptive name			
+outlays <- mutate(.data = outlays, dollars_thousands = n)
+outlays$n <- NULL
+
+## Rename `Agency Name` in snake case.
+colnames(outlays)[2] <- 'agency_name'
+
+```
+
+<br><br>
+
+# Annual Outlays 1998-2019 of Some of the Largest Agencies & Departments  
+Departments have received differing treatment over the past two decades depending on presidential priorities and world events. We can see the effects of the recession on the highlighted departments. The Department of Treasury, whose outlays usually consist of interest payments, had to massively increase its expenditures in the depths of the financial crisis. The Department of Agriculture saw a stubborn increase in its outlays due to increased usage of SNAP, more commonly known as the food stamp program.  
+
+The September 11th 2001 terrorist attacks and the subsequent invasions of Afghanistan and Iraq saw Department of Defense Expenditures soar, until hostilities started to wind down in 2010 or so. The Department of Homeland Security, founded in 2002, has consistently received \$50-\$100 billion per year. The increase in 2018 funding for both departments is a reflection of the Trump administration's priorities.
+```{r Facetwrap 1998-2019, message=FALSE, warning=FALSE}
+
+facet_data <- outlays %>% 
+  filter(fiscal_year  %in% c(1998:2019)) %>%
+  filter(agency_name %in% c("Department of Agriculture",
+  "Department of Defense--Military Programs",
+  "Department of Education",
+  "Department of Homeland Security",
+  "Department of Labor", 
+  "Department of the Treasury", 
+  "Department of Veterans Affairs", 
+  "Department of State", 
+  "Department of Justice"))
+
+facet_data <- mutate(facet_data, agency_name = ifelse(agency_name == "Department of Defense--Military Programs", "Department of Defense", agency_name))
+
+facet_plot <- facet_data %>% ggplot(aes(x = fiscal_year, y = dollars_thousands)) +
+    annotate(geom = 'rect', 
+             ymin = -Inf, 
+             ymax = Inf, 
+             xmin =10.917, 
+             xmax = 12.5, 
+             fill = 'red', 
+             alpha = 0.2) +
+    annotate(geom = 'rect', 
+             ymin = -Inf, 
+             ymax = Inf, 
+             xmin = 3.25,
+             xmax = 3.83, 
+             fill = 'red', 
+             alpha = 0.2) +
+  
+  annotate(geom = "segment", x = 3.75, xend = 3.75, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=3) +
+  annotate(geom = "text", x = 3.75, y = Inf, hjust=1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="9/11\nTerrorist\nAttacks", size=3) +
+  
+  annotate(geom = "segment", x = 5.22, xend = 5.22, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=3) +
+  annotate(geom = "text", x = 5.22, y = Inf, hjust=-.1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="Iraq War", size=3) +
+  
+  annotate(geom = "segment", x = 20.055, xend = 20.055, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=2) +
+  annotate(geom = "text", x = 20.055, y = Inf, hjust=-.1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="Trump\nInaugurated", size=3) +
+  
+  annotate(geom = "segment", x = 12.055, xend = 12.055, y = 0, yend=Inf,
+             fill = 'black', 
+             alpha = 0.7, linetype=2) +
+  annotate(geom = "text", x = 12.055, y = Inf, hjust=-.1, vjust=1.0,
+             fill = 'black', 
+             alpha = 0.7, label="Obama\nInaugurated", size=3) +
+  geom_col() + 
+  facet_wrap(~agency_name) +
+  scale_y_continuous(name = "Outlays", 
+                     labels = scales::dollar_format(scale=.000001, 
+                                                    accuracy = 1, 
+                                                    suffix = 'B')) + 
+  scale_x_discrete( breaks=(seq(1998,2019,2)), 
+                   labels = (seq(1998,2019,2)) 
+                   ) +
+  labs(title = "Defense Generously Funded While Other Departments Languish",
+       subtitle = "Red shading indicates recessions",
+       caption="Source: United States. Office of Management and Budget. Public Budget Database.",
+       x = "Fiscal Year",
+       y = "Outlays") + iltheme +
+  theme(axis.text.x = element_text(angle = 90),
+        strip.text = element_text(face = "bold", 
+                                  size = rel(1.0)), 
+        axis.text = element_text(size=2),
+        legend.position="none",
+        plot.title = element_text(color="black", size=20, face="bold", family="Verdana", hjust=0, vjust=1)) 
+
+ggsave(filename = 'visuals/Outlays_Since1995_FacetWrap.pdf', width = 11, height = 8.5)
+last_plot()
+```
+
+
+# Breakdown of Federal Spending: Top 8 Agencies/Departments by Outlays
+
+
+
+<br><br>
+
+# How is departmental and agency spending categorized?
+
+I'm still not quite sure what to do with this graphic. I need to clean it up, obviously.
+
+```{r Proportion Mandatory, echo=FALSE, message=FALSE, warning=FALSE}
+spendtype <- budget_longform %>% 
+  filter(fiscal_year %in% c(2018) & expenditure > 0) %>% 
+  select(fiscal_year, 
+         `Agency Name`, 
+         `BEA Category`, 
+         `Grant/non-grant split`, 
+         expenditure) %>%
+  group_by(fiscal_year, 
+           `Agency Name`, 
+           `BEA Category`) %>%
+    tally(expenditure)
+
+v2_spendtype <- spread(spendtype, key = `BEA Category`, value = `n`)
+colnames(v2_spendtype) <- c('fiscal_year', 'agency_name', 'discretionary', 'mandatory', 'net_interest')
+v2_spendtype <- v2_spendtype %>% rowwise() %>% mutate(prop_mandatory = mandatory / sum(discretionary, mandatory, net_interest, na.rm=TRUE))
+v2v2_spendtype <- v2_spendtype %>% rowwise() %>% mutate(total_spend = sum(discretionary, mandatory, net_interest, na.rm=TRUE))
+v2_spendtype <- mutate(.data = v2_spendtype,  mandatory = coalesce(mandatory, 0))
+v2_spendtype <- mutate(.data = v2_spendtype,  discretionary = coalesce(discretionary, 0))
+v2_spendtype <- mutate(.data = v2_spendtype,  net_interest = coalesce(net_interest, 0))
+v2_spendtype <- mutate(.data = v2_spendtype,  prop_mandatory = coalesce(prop_mandatory, 0))
+v2_spendtype <- mutate(v2_spendtype, total_spend = discretionary +  mandatory + net_interest)
+
+prop_labs <- labs(title = "Top Spending Agencies Have a Mix of Discretionary and Mandatory Spending",
+         subtitle = "The DOD is one of the largest discretionary outlays, while HHS is the largest mandatory outlays",
+         caption = "Source: United States. Office of Management and Budget. Public Budget Database.")
+
+repel_labs <- geom_label_repel(size=4, 
+                               nudge_x = .1, 
+                               nudge_y=.1, 
+                               force = 5, 
+                               box.padding = .7,
+                   aes(label=ifelse(((prop_mandatory >= .25 & prop_mandatory <= .80)| agency_name %in% c("Department of Defense--Military Programs", "Department of Health and Human Services", "Department of the Treasury", "Department of Labor", "Department of Transportation", "Department of Homeland Security", "Department of State", "Department of Justice")),
+                                   as.character(agency_name),
+                                   element_blank())))
+
+discvmand <- ggplot(data = filter(v2_spendtype, mandatory > 0 & discretionary > 0), 
+                    aes(x = mandatory, 
+                        y = discretionary)) + 
+  geom_point(aes(size=total_spend, 
+                 color=prop_mandatory)) +
+  geom_abline(intercept = 0, 
+              slope = 1, 
+              linetype=2, 
+              color='#AFAFAF') +
+  scale_y_log10(name = "Discretionary Outlays (Log Scale)", 
+                labels = scales::dollar_format(scale=.000001, 
+                                               accuracy = .01, 
+                                               suffix = 'B')) + 
+  scale_x_log10(name = "Mandatory Outlays (Log Scale)", 
+                labels = scales::dollar_format(scale=.000001, 
+                                               accuracy = .01, 
+                                               suffix = 'B')) + 
+  prop_labs +
+  iltheme +
+  theme(plot.title = element_text(size=18, hjust=0,vjust=0),
+        axis.text.x = element_text(), 
+        axis.line = element_line(size=0.1),   
+        panel.border = element_blank(),
+        panel.grid.major.x = element_line(colour="#AFAFAF"),
+        panel.grid.major.y = element_line(colour="#AFAFAF"), 
+        legend.position = "bottom",
+        legend.direction = "horizontal", 
+        legend.background = element_rect(colour = "black"),
+        legend.text = element_text(size=10),
+        legend.title = element_text(size=14)
+        ) + 
+  repel_labs + 
+  scale_color_gradient(low = '#66A61E', 
+                       high = '#E7298A',
+                       name="Proportion of Spending\nthat is Mandatory",
+                       labels = scales::percent_format(accuracy = 1),  
+                       breaks = seq(0,1,by=.25)) +
+  scale_size_continuous(name = "Total Spending", 
+                        range = c(2,15), 
+                        labels = scales::dollar_format(scale=.000001, 
+                                               accuracy = 1, 
+                                               suffix = 'B')) +
+ expand_limits(x = 1500000000,
+               y = 1500000000) + 
+  annotate(geom = "text", x = 500000000, y = 1000000, vjust = 0.5,
+           label = "***77% of Treasury's Spending \nis On Interest, not Mandatory \nor Discretionary Spending") + 
+  annotate(geom = "segment", 
+           x = 400000000, xend = 130000000, 
+           y = 2000000, yend = 10000000)
+
+ggsave(filename = 'visuals/Proportion_Mandatory_2018.pdf', width = 14, height = 12)
+last_plot()
+```
+
+
+
+# Spending Over Time  
+The share of federal spending classified as mandatory has grown as a percentage of total spending since the 1960s. 
+
+Mandatory spending is spending controlled by laws other than annual appropriations acts. This spending has been mandated by Congress in the past and does does have to be reappropriated each year. Most mandatory programs are fall under health care (e.g. Medicare, Medicaid), social security, and other income support programs. Spending on mandatory programs is determined by the number of eligible recipients. 
+
+Discretionary spending must be appropriated each year by the House and Senate. The largest portion of discretionary spending is funding for the Department of Defense and other defense-related programs. Non-defense discretionary spending, just under half of total discretionary spending in 2018, accounts for all federal spending on diplomacy, education, transportation, research, law enforcement, and paying for the operations of the federal government. 
+
+```{r Share of Spending, echo=FALSE}
+type_over_time <- budget_longform %>% select(fiscal_year, `BEA Category`, expenditure) %>% filter(fiscal_year != 'TQ') %>% group_by(fiscal_year, `BEA Category`) %>% tally(expenditure) 
+
+spend_overtime <- type_over_time %>% group_by(fiscal_year) %>% filter(!fiscal_year %in% c(2019, 2020, 2021, 2022, 2023))
+rm(type_over_time)
+
+ShareOfSpending <-spend_overtime %>% 
+  ggplot(aes(x=fiscal_year, 
+            y=n, 
+            color=`BEA Category`, 
+            fill=`BEA Category`)) + 
+  geom_area(position = "fill", 
+            aes(group=`BEA Category`), 
+            color = "black") + 
+  scale_y_continuous(expand = c(0, 0), 
+                     labels = scales::percent_format(), 
+                     breaks = seq(0, 
+                                  1, 
+                                  by = .2)) + 
+  geom_line(color = "black", position = "fill", aes(group=`BEA Category`)) + 
+  scale_x_discrete(expand = c(0,0), 
+                   breaks=(seq(1962,2018,4)), 
+                   labels = (seq(1962,2018,4))) +
+  scale_fill_manual("Bureau of Economic Analysis\nSpending Category", 
+                    values = brewer.pal(7, "Pastel1")) +  
+  labs(title = "Mandatory Spending Has Accounted for a \n Larger and Larger Share of the Federal Budget",
+         subtitle = "",
+         caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
+         x = "Year",
+         y = "Proportion of Federal Budget") + iltheme + 
+    theme(axis.text.x = element_text(angle = 90, 
+                                     hjust = 0, 
+                                     size = 14),
+          axis.text.y = element_text(size = 14),
+          panel.grid.minor = element_blank(), panel.grid = element_line(size=.10),
+          legend.background = element_rect(fill="lightblue",
+                                         size=1, 
+                                         linetype="solid", 
+                                         colour ="black"),
+          panel.background = element_rect(fill = NA, size = .2),
+          panel.ontop = TRUE, legend.position="none") +
+  annotate(geom = "text", 
+           label = "Discretionary Spending",
+           size=10,
+           x=22, 
+           y=0.85,
+           hjust=0) +
+  annotate(geom = "text", 
+           label = "Mandatory Spending",
+           size=10,
+           x=22, 
+           y=0.40,
+           hjust=0) +
+  annotate(geom = "text", 
+           label = "Interest Spending",
+           size=10,
+           x=22, 
+           y=0.08,
+           hjust=0)
+
+ggsave(filename = 'visuals/ShareOfSpending.pdf', width = 11, height = 8.5)
+ShareOfSpending
 ```

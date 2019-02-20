@@ -46,6 +46,7 @@ https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures
 
 * Source for federal outlays on the Office of Management and Budget website: 
 https://www.whitehouse.gov/omb/supplemental-materials/
+
 ```{r Read in Data, include=FALSE, echo=FALSE}
 base_df <- read_csv(file = 'raw_data/tax_expenditures_18to28_renamed.csv')
 rev <- read_csv(file = 'raw_data/receipts-fy2019.csv')
@@ -111,7 +112,8 @@ labelling <-geom_text(aes(label= c("\n\n\n\n\n\n\n\nCommerce\nand\nHousing",
 plot1 <- bar_to_plot + 
     scale_y_continuous(expand = c(0,0),
                        name = "Tax Expenditures in Billions of Dollars", 
-                       labels = scales::dollar_format(accuracy = 1, suffix = 'B')) + 
+                       labels = scales::dollar_format(accuracy = 1, 
+                                                      suffix = 'B')) + 
     scale_x_discrete() + 
     labs(title = "The United States spends trillions \nof dollars on tax loopholes each year", 
          subtitle = "US Federal Government Tax Expenditures In 2018",
