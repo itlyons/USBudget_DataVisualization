@@ -1,0 +1,130 @@
+---
+title: "Final Static Portfolio"
+author: "Ian Lyons"
+date: "2/12/2019"
+output: 
+  html_document: 
+    code_folding: hide
+    fig_caption: yes
+    fig_height: 9
+    fig_width: 12
+    toc_depth: 1
+    toc_float:
+      collapsed: false
+    theme: cosmo
+    toc: yes
+urlcolor: blue
+---
+
+
+```{r setup, echo=FALSE, include=FALSE}
+library(tidyverse)
+library(rmarkdown)
+library(here)
+library(gghighlight)
+library(ggpubr)
+library(formatR)
+library(tinytex)
+library(scales)
+library(ggthemes)
+library(extrafont)
+library(RColorBrewer)
+library(treemapify)
+library(ggplot2)
+
+library(fiftystater)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
+```
+
+
+# Sourcing
+
+* Source for tax expenditures on the Treasury Department Website: 
+https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures
+
+* Source for federal outlays on the Office of Management and Budget website: 
+https://www.whitehouse.gov/omb/supplemental-materials/
+
+
+```{r Read in Data, include=FALSE, echo=FALSE}
+base_df <- read_csv(file = 'raw_data/tax_expenditures_18to28_renamed.csv')
+rev <- read_csv(file = 'raw_data/receipts-fy2019.csv')
+budg_2019 <- read_csv(file = 'raw_data/outlays-fy2019.csv')
+```
+
+
+```{r Reshape tax expenditures data}
+tax_long <- gather(base_df, fiscal_year, expenditure, '2018':'2028', factor_key=TRUE)
+tax_long$FY2019_to_2028 <- NULL
+```
+
+```{r Define My Theme}
+custom_pal <- c("#3FC1C9", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D", "#CC7776", "#FFF07A")
+
+# These colors are from the brewer 'Dark2' palette
+bea_palette <- c("Commerce and housing" = "#3FC1C9", "Income security" = "#ED713A", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
+
+iltheme <- theme(plot.title = element_text(color="black", size=22, face="bold", hjust = 0.5, family="Verdana"),
+                text = element_text(family="Courier New", size=14),
+                plot.subtitle = element_text(color="#4c4e4d", size=16, hjust=0.5, family = "Verdana"),
+                axis.title.x = element_text(color="black", size=20, family="Verdana"),
+                axis.title.y = element_text(color="black", size=20, family="Verdana"), 
+                plot.caption = element_text(color="black", size=14, face="italic"),
+                axis.text.x = element_text(size=14),
+                axis.text.y = element_text(size=14),
+                plot.background=element_rect(fill="#F0F0F0"),
+                panel.background =element_rect(fill="#F0F0F0"),
+                panel.grid.minor.y = element_blank(),
+                axis.ticks = element_blank(),
+                axis.line = element_line(size=1, color = "Black"),
+                legend.text = element_text(size=16))
+```
+
+
+# Largest Tax Expenditures By Category
+Tax expenditures are what we usually refer to as tax loopholes or tax breaks. The US Department of Treasury classifies these tax provisions as tax "expenditures" in recognition of the fact that they are "often viewed as alternatives to other policy instruments, such as spending or regulatory programs" ([Treasury](https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures)). 
+
+In the United States, many policies act though the tax code rather than through fiscal policy. For instance, other developed nations generally provide health care and/or health insurance for all of their citizens directly though national insurance/medical programs. However, in the United States most people receive insurance through their employer, perhaps not even realizing the generous tax treatment they and their employer are receiving.
+
+```{r Top 7 2018 Tax Expenditures, message=FALSE, warning=FALSE}
+time_series <- tax_long %>% select(fiscal_year, Category, expenditure) %>% filter(fiscal_year %in% c(2018)) %>% 
+  group_by(fiscal_year, Category) %>% tally(expenditure)
+
+time_series <- mutate(.data = time_series, amount_billions = n/1000)
+time_series$n <- NULL
+time_series <- arrange(time_series, -amount_billions)
+top7 <- top_n(time_series, 7)
+
+
+bar_to_plot <- ggplot(data=top7, aes(x=reorder(Category, -amount_billions), y=amount_billions, fill=Category)) + 
+  geom_col(position = "dodge", color="black")
+
+labelling <-geom_text(aes(label= c("\n\n\n\n\n\n\n\nCommerce\nand\nHousing", 
+                         "\n\nIncome\nSecurity",
+                         "\nHealth", 
+                         "Education\nTraining\nEmployment",
+                         "International\nAffairs", 
+                         "State/\nLocal\nAid",
+                         "Fiscal\nAssistance"), color="black", vjust=0.5),
+            position = position_identity(), color="black")
+
+plot1 <- bar_to_plot + 
+    scale_y_continuous(expand = c(0,0),
+                       name = "Tax Expenditures in Billions of Dollars", 
+                       labels = scales::dollar_format(accuracy = 1, suffix = 'B')) + 
+    scale_x_discrete() + 
+    labs(title = "The United States spends trillions \nof dollars on tax loopholes each year", 
+         subtitle = "US Federal Government Tax Expenditures In 2018",
+         caption = "Source: United States. Department of Treasury. Tax Policy: Tax Expenditures.\n*These estimates are made relative to current law as of July 1, 2018", 
+         x = "Category of Tax Break") + 
+  labelling +
+  iltheme + 
+  theme(legend.position="none", 
+        axis.text.x = element_blank()) +  
+  scale_fill_manual(values=bea_palette)
+
+ggsave(filename = 'visuals/BiggestCategoryOfBreaks.pdf', width = 11, height = 8.5)
+last_plot()
+```
