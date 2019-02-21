@@ -1,7 +1,7 @@
 ---
 title: "Final Static Portfolio"
 author: "Ian Lyons"
-date: "2/12/2019"
+date: "2/17/2019"
 output: 
   html_document: 
     code_folding: hide
@@ -478,7 +478,6 @@ ShareOfSpending <-spend_overtime %>%
   scale_fill_manual("Bureau of Economic Analysis\nSpending Category", 
                     values = brewer.pal(7, "Dark2")) +  
   labs(title = "Mandatory Spending Has Accounted for a \n Larger and Larger Share of the Federal Budget",
-         subtitle = "",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
          x = "Year",
          y = "Proportion of Federal Budget") + iltheme + 
@@ -514,7 +513,7 @@ ShareOfSpending <-spend_overtime %>%
            hjust=0)
 
 ggsave(filename = 'visuals/ShareOfSpending.pdf', width = 11, height = 8.5)
-#ShareOfSpending
+ShareOfSpending
 ```
  
 <br><br>  
@@ -587,7 +586,7 @@ rev_share <- temp2 %>%
 
 ggsave(filename = 'visuals/ShareOfRevenue.pdf', width = 11, height = 10)
 
-#rev_share
+rev_share
 ```
 
 <br><br>
