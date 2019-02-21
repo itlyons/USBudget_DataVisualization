@@ -563,7 +563,7 @@ discvmand <- ggplot(data = filter(v2_spendtype, mandatory > 0 & discretionary > 
   annotate(geom = "text", x = 50000000, y = 1000000, vjust = 0.5, hjust=0, 
            label = "***77% of Treasury's spending goes toward\n interest on the national debt, which is\nnot considered mandatory or discretionary Spending") + 
   annotate(geom = "segment", 
-           x = 400000000, xend = 130000000, 
+           x = 100000000, xend = 130000000, 
            y = 2000000, yend = 10000000)
 
 ggsave(filename = 'visuals/Proportion_Mandatory_2018.pdf', width = 14, height = 12)
@@ -697,7 +697,7 @@ mapped_pc <- ggplot(data=joined) +
   geom_sf(data = filter(joined, STUSPS %in% expanded), 
           aes(fill = bins), 
           color="#974ea2", size=2, show.legend = FALSE) +
-  annotate(geom = "text", 
+  annotate(geom = "text", hjust=1,
            x = -70, 
            y = 35, 
            label = "States Outlined in Purple\nExpanded Medicaid by the\nBeginning of 2018", 
