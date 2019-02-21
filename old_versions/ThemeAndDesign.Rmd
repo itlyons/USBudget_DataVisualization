@@ -142,7 +142,7 @@ expend_plot <- ggplot(data=top10,
   coord_flip() +
   scale_y_continuous(expand = c(0.005, 0), 
                      name = "Size of Tax Break in Dollars", 
-                     labels = scales::dollar_format(scale = .001, accuracy = 1, suffix = 'B')
+                     labels = scales::dollar_format(scale = .001, accuracy = 1, suffi x = 'B')
                      ) + 
   scale_x_discrete(labels = scales::wrap_format(18)) + 
   scale_fill_manual(name="Treasury-Assigned Category", 

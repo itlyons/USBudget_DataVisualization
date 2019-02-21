@@ -67,9 +67,9 @@ custom_pal <- c("#3FC1C9", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D"
 # These colors are from the brewer 'Dark2' palette
 bea_palette <- c("Commerce and housing" = "#3FC1C9", "Income security" = "#ED713A", "Health" = "#7570B3", "Education, training, employment, and social services" = "#E7298A", "International affairs" = "#66A61E","Addendum: Aid to State and local governments:" = "#E6AB02", "General purpose fiscal assistance" = "#A6761D")
 
-iltheme <- theme(plot.title = element_text(color="black", size=22, face="bold", family="Verdana", hjust=0.5),
+iltheme <- theme(plot.title = element_text(color="black", size=22, face="bold", family="Verdana", hjust=0),
                 text = element_text(family="Courier New", size=14),
-                plot.subtitle = element_text(color="#4c4e4d", size=16, hjust=0.5, family = "Verdana"),
+                plot.subtitle = element_text(color="#4c4e4d", size=16, hjust=0, family = "Verdana"),
                 axis.title.x = element_text(color="black", size=20, family="Verdana"),
                 axis.title.y = element_text(color="black", size=20, family="Verdana"), 
                 plot.caption = element_text(color="black", size=14, face="italic"),
@@ -83,6 +83,7 @@ iltheme <- theme(plot.title = element_text(color="black", size=22, face="bold", 
                 legend.text = element_text(size=16))
 ```
 
+<br><br>  
 
 # Largest Tax Expenditures By Category
 Tax expenditures are what we usually refer to as tax loopholes or tax breaks. The US Department of Treasury classifies these tax provisions as tax "expenditures" in recognition of the fact that they are "often viewed as alternatives to other policy instruments, such as spending or regulatory programs" ([Treasury](https://home.treasury.gov/policy-issues/tax-policy/tax-expenditures)). 
@@ -133,6 +134,7 @@ ggsave(filename = 'visuals/BiggestCategoryOfBreaks.pdf', width = 11, height = 8.
 last_plot()
 ```
 
+<br><br>  
 
 # The largest individual tax expenditures in 2018
 Looking at the largest individual tax breaks, it is easy to see the hidden costs of the American approach to health care policy. 
@@ -181,7 +183,7 @@ expend_plot <- ggplot(data=top10,
         )
 
 ggsave(filename = 'visuals/BiggestIndividualBreaks.pdf', width = 13, height = 11)
-last_plot()
+#last_plot()
 ```
 
 
@@ -302,19 +304,53 @@ facet_plot <- facet_data %>% ggplot(aes(x = fiscal_year, y = dollars_thousands))
         plot.title = element_text(color="black", size=20, face="bold", family="Verdana", hjust=0, vjust=1)) 
 
 ggsave(filename = 'visuals/Outlays_Since1995_FacetWrap.pdf', width = 11, height = 8.5)
-last_plot()
+#last_plot()
 ```
 
 
 # Breakdown of Federal Spending: Top 8 Agencies/Departments by Outlays
 
 
+```{r Treemap - 2017 Spending}
+
+top8agencies <- c("Department of Health and Human Services", "Social Security Administration", "Department of the Treasury", "Department of Defense--Military Programs", "Department of Veterans Affairs", "Other Defense Civil Programs", "Office of Personnel Management", "Department of Education")
+HHSonly <- budget_longform %>% filter(fiscal_year %in% c(2017) & `Agency Name` %in% top8agencies) 
+HHS <-  HHSonly %>% select(fiscal_year, `Agency Name`, `Bureau Name`, expenditure) %>% filter(expenditure > 1000000) %>% group_by(fiscal_year, `Agency Name`, `Bureau Name`) %>% summarise(exp=sum(expenditure))
+
+projected <-  HHS %>% ggplot(aes(area=exp,  
+                                 fill=`Agency Name`, 
+                                 label = `Bureau Name`, 
+                                 subgroup=`Agency Name`)) +
+  geom_treemap()  + 
+  iltheme +
+  geom_treemap_text(colour="white", place = "topleft",
+                    grow = TRUE,
+                    reflow = TRUE,
+                    min.size = 3, 
+                    padding.x = grid::unit(unit="mm", 2), 
+                    padding.y = grid::unit(unit="mm", 2)) +
+  geom_treemap_subgroup_border(colour = "black", 
+                               size = 1) +
+  theme(legend.position="bottom", legend.title = element_text(face = "bold", size=16)) +
+  scale_fill_brewer(palette = "Dark2", 
+                    labels = scales::wrap_format(16), 
+                    name="Agency/Dept") +
+  scale_size_area() +
+  labs(title = "Social Security, Medicare/Medicaid,\nand Interest on Debt Dominate the Budget",
+       subtitle = "Colors Correspond to Agencies, Smaller Boxes to Bureaus or Bureau Equivalents",
+       caption = "Source: United States. Office of Management and Budget. Public Budget Database.")
+
+ggsave(filename = 'visuals/TreemapTop8.pdf', width = 11, height = 8.5)
+
+last_plot()
+``` 
 
 <br><br>
+<br><br>  
+
 
 # How is departmental and agency spending categorized?
 
-I'm still not quite sure what to do with this graphic. I need to clean it up, obviously.
 
 ```{r Proportion Mandatory, echo=FALSE, message=FALSE, warning=FALSE}
 spendtype <- budget_longform %>% 
@@ -396,8 +432,8 @@ discvmand <- ggplot(data = filter(v2_spendtype, mandatory > 0 & discretionary > 
                                                suffix = 'B')) +
  expand_limits(x = 1500000000,
                y = 1500000000) + 
-  annotate(geom = "text", x = 500000000, y = 1000000, vjust = 0.5,
-           label = "***77% of Treasury's Spending \nis On Interest, not Mandatory \nor Discretionary Spending") + 
+  annotate(geom = "text", x = 500000000, y = 1000000, vjust = 0.5, hjust=0.25, 
+           label = "***77% of Treasury's spending goes toward\n interest on the national debt, which is\nnot considered mandatory or discretionary Spending") + 
   annotate(geom = "segment", 
            x = 400000000, xend = 130000000, 
            y = 2000000, yend = 10000000)
@@ -407,6 +443,7 @@ last_plot()
 ```
 
 
+<br><br>  
 
 # Spending Over Time  
 The share of federal spending classified as mandatory has grown as a percentage of total spending since the 1960s. 
@@ -439,7 +476,7 @@ ShareOfSpending <-spend_overtime %>%
                    breaks=(seq(1962,2018,4)), 
                    labels = (seq(1962,2018,4))) +
   scale_fill_manual("Bureau of Economic Analysis\nSpending Category", 
-                    values = brewer.pal(7, "Pastel1")) +  
+                    values = brewer.pal(7, "Dark2")) +  
   labs(title = "Mandatory Spending Has Accounted for a \n Larger and Larger Share of the Federal Budget",
          subtitle = "",
          caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
@@ -449,7 +486,8 @@ ShareOfSpending <-spend_overtime %>%
                                      hjust = 0, 
                                      size = 14),
           axis.text.y = element_text(size = 14),
-          panel.grid.minor = element_blank(), panel.grid = element_line(size=.10),
+          panel.grid.minor = element_blank(), 
+          panel.grid = element_line(size=.10),
           legend.background = element_rect(fill="lightblue",
                                          size=1, 
                                          linetype="solid", 
@@ -458,23 +496,286 @@ ShareOfSpending <-spend_overtime %>%
           panel.ontop = TRUE, legend.position="none") +
   annotate(geom = "text", 
            label = "Discretionary Spending",
-           size=10,
+           size=8,
            x=22, 
            y=0.85,
            hjust=0) +
   annotate(geom = "text", 
            label = "Mandatory Spending",
-           size=10,
+           size=8,
            x=22, 
            y=0.40,
            hjust=0) +
   annotate(geom = "text", 
            label = "Interest Spending",
-           size=10,
+           size=8,
            x=22, 
            y=0.08,
            hjust=0)
 
 ggsave(filename = 'visuals/ShareOfSpending.pdf', width = 11, height = 8.5)
-ShareOfSpending
+#ShareOfSpending
+```
+ 
+<br><br>  
+
+# Revenues Over Time
+
+The federal government can borrow money, or collect taxes/revenues to finance its activities. Revenues can be collected from individuals or businesses, through fees, sales taxes, profit taxes, payroll taxes, or through tariffs- taxes on foreign goods. 
+
+Since 1962, the proportion of revenue collected through payroll taxes and individual income taxes has increased substantially. The proportion of revenues collected through the corporate income tax and excise taxes (sales taxes, such as the federal gasoline tax) has fallen. The share of revenue from payroll taxes has increased from about 20% of revenues in 1962, to about 35% in 2018. Individual income taxes have gone from a little over 40% of revenues to almost 50% of all federal revenue. 
+
+```{r Revenues Over Time, echo=FALSE}
+rev_colnames <- c("Category Code", "Category Name", "Subcategory Code", "Subcategory Name", "Agency Code", "Agency Name", "Bureau Code", "Bureau Name", "Account Code", "Account Name", "Treasury Agency Code", "On/Off Budget")
+colnames(rev)[1:12] <- rev_colnames
+rev_long <- gather(rev, fiscal_year, expenditure, '1962':'2023', factor_key=TRUE) %>% select("Category Name", "Subcategory Name", "Agency Name", "Bureau Name", "Account Name", "Treasury Agency Code", "On/Off Budget", "fiscal_year", "expenditure")
+
+
+temp <- rev_long %>% group_by(`Category Name`, fiscal_year) %>% select(fiscal_year, `Category Name`, expenditure) %>%
+  summarize(sum=sum(expenditure))
+temp2 <- filter(temp, `Category Name` != 'Legislative Proposals' & fiscal_year != 'TQ' & !fiscal_year %in% c(2019, 2020, 2021, 2022, 2023))
+
+
+labsrev <-   labs(title = "Less Reliance On Corporate Taxes, More Payroll Taxes",
+         caption = "Source: United States. Office of Management and Budget. Public Budget Database.",
+         x = "Fiscal Year",
+         y = "Proportion of Federal Revenues")
+
+cat_list <- c("Corporation\nIncome Taxes", 
+	"Customs Duties", 
+	"Estate and\nGift Taxes", 
+	"Excise Taxes", 
+	"Individual\nIncome Taxes", 
+	"Misc. Governmental\nReceipts", 
+	"Social Insurance &\nPayroll Taxes")
+
+themerev <- theme(axis.text.x = element_text(angle = 90, hjust = 0, size = 12),
+                  axis.text.y = element_text(size = 12),
+                  legend.background = element_rect(size=1, 
+                                                   linetype="solid", 
+                                                   colour ="black"),
+                  panel.background = element_rect(fill = NA),
+                  panel.ontop = TRUE, 
+                  legend.position= "bottom",
+                  legend.text = element_text(size=12),
+                  legend.title = element_text(size=12, face = "bold", hjust = 0.5),
+                  panel.grid.minor = element_blank(), 
+                  panel.grid = element_line(size=.05)
+                  )
+
+rev_share <- temp2 %>% 
+  ggplot(aes(x=fiscal_year, 
+             y=`sum`, 
+             color=`Category Name`, 
+             fill=`Category Name`)) +
+  geom_area(position = "fill", 
+            aes(group=`Category Name`), 
+            color = "black") + 
+  scale_y_continuous(expand = c(0, 0), 
+                     labels = scales::percent_format(), 
+                     breaks = seq(0, 1, by=.2)) + 
+  geom_line(color = "black", position = "fill", aes(group=`Category Name`)) + 
+  scale_x_discrete(expand = c(0,0), 
+                   breaks=(seq(1962,2018,4)), 
+                   labels = (seq(1962,2018,4))) +
+  scale_fill_manual("Bureau of\nEconomic Analysis\nRevenue Category", 
+                    values = brewer.pal(7, "Dark2"), 
+                    labels = cat_list) +
+  labsrev + 
+  iltheme +
+  themerev
+
+ggsave(filename = 'visuals/ShareOfRevenue.pdf', width = 11, height = 10)
+
+#rev_share
+```
+
+<br><br>
+
+
+# Budget Deficit And Surplus  
+
+For the vast majority of the post-World War 2 era, the United States government has run a budget deficit. A budget surplus was achieved for only a handful of years, during the Truman administration and much later during the Clinton administration. 
+
+You can see the effects of wars and recessions on the budget surplus or deficit. During the late-2000's Great Recession, for example, the deficit ballooned to over 10% of GDP thanks to falling revenue and increased spending on automatic stabalizers, like unemployment insurance and SNAP benefits. 
+
+The budgetary policies of the Clinton administration, which was forced to work alongside an austere Republican congress after 1994, achieved a deficit reduciton that achieved a surplus for the first time in nearly 50 years.  
+
+```{r Budget Surplus Or Deficit, message=FALSE, warning=FALSE}
+percent_gdp <- read_csv("raw_data/PercentOfGDP.csv")
+
+
+surp_def <- ggplot(data=percent_gdp, aes(x = `Fiscal Year`, y = `Total Revenues`)) +
+  geom_line(color = "green",
+            size = 0.75) +
+  geom_line(aes(x=`Fiscal Year`, 
+                y = `Total Expenditures`),
+            size = 0.75, 
+            color = "red")+
+  geom_col(aes(x=`Fiscal Year`, 
+                y = `Total Expenditures`-`Total Revenues`), 
+            color="black") +
+  labs(title = "The United States Has Run Deficits For\nMost of the Post-WW2 Era",
+       subtitle = "More recent deficits are due to tax cuts and a temporary\nincrease in spending and loss of revenues during the Great Recession",
+       caption="Source: United States. Office of Management and Budget. Public Budget Database.",
+       x = "Fiscal Year",
+       y = "Percent of GDP") +
+  iltheme + 
+  geom_abline(intercept = 0, 
+              slope = 0, 
+              color="black") +
+  annotate(geom = "text", x = 2010, y = .40,
+             fill = 'black', 
+             alpha = 1, 
+             label="Total Govt\nExpenditures", 
+             size = 6) +
+  annotate(geom = "text", x = 2010, y = .20,
+             fill = 'black', 
+             alpha = 1, 
+             label="Total Govt\nRevenues", 
+             size = 6) +
+  annotate(geom = "text", x = 1979, y = .15,
+             fill = 'black', 
+             alpha = 1, 
+             label="Yearly Budget Surplus/Deficit", 
+             size = 6) +
+  annotate(geom = "segment", 
+           x = 1979, y = .125 , 
+           xend = 1979, yend = .05) +
+  annotate(geom = "segment", 
+           x = 1977, y = .125 , 
+           xend = 1972, yend = .05) +
+  annotate(geom = "segment", 
+           x = 1981, y = .125 , 
+           xend = 1986, yend = .06) +
+  scale_y_continuous(limits = c(-.05,0.45), 
+                     labels = scales::percent_format(), 
+                     breaks = seq(-0.05,0.4,by=.05),
+                     expand = c(0,0),
+                     name="Percent of GDP") + 
+  scale_x_continuous(breaks = (seq(1948,2017,4)), 
+                   labels = (seq(1948,2017,4)), 
+                   expand = c(0,0)) +
+  theme(axis.line.x.bottom = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.text.x = element_text(angle = 90)) 
+
+surp_def
+
+```
+
+
+
+
+# Federal Aid to State & Local Governments
+
+In Fiscal Year 2018, the federal government was projected to grant about $728 billion to state and local governments. According to the Congressional Research Service, federal grants make up one-third of state spending, and more than half of state spending on health care and other public assistance programs. Since the expansion of Medicaid included in the Affordable Care Act (ACA), the amount of federal grant money flowing to health care has only increased. 
+
+```{r Federal Aid to State & Local Governments, message=FALSE, warning=FALSE, include=FALSE}
+library("ggplot2")
+theme_set(theme_bw())
+library("sf")
+raw_aid <- read_csv("raw_data/state aid - Sheet1.csv")
+```
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#states <- st_read('maps/cb_2017_us_state_5m.shp')
+data("fifty_states")
+
+as_tibble(fifty_states)
+st_as_sf(fifty_states, coords = c("long", "lat"))
+
+st_as_sf(fifty_states, coords = c("long", "lat")) %>% 
+   # convert sets of points to polygons
+   group_by(id, piece) %>% 
+   summarize(do_union = FALSE) %>%
+   st_cast("POLYGON")
+
+# convert fifty_states to an sf data frame
+sf_fifty <- st_as_sf(fifty_states, coords = c("long", "lat")) %>% 
+    # convert sets of points to polygons
+    group_by(id, piece) %>% 
+    summarize(do_union = FALSE) %>%
+    st_cast("POLYGON") %>%
+    # convert polygons to multipolygons for states with discontinuous regions
+    group_by(id) %>%
+    summarize()
+raw_aid$NAME <- tolower(raw_aid$NAME)
+joined <- left_join(sf_fifty, raw_aid, by=c("id" = "NAME"))
+```
+
+
+```{r Per Capita Federal Grants, fig.height=12, fig.width=14, message=FALSE, warning=FALSE}
+
+breaks <- quantile(x = joined$`2018 grant per capita`,seq(0,1,.20))
+bins <- cut(joined$`2018 grant per capita`, unique(breaks), include.lowest=TRUE)
+joined$bins <- bins
+
+# Create a list of states that expanded Medicaid by the beginning of 2018, since grants seem to be strongly related to Medicaid expansion.
+expanded <- c("AK", "HI", "NM", "AZ", "CA", "CO", "NV", "OR", "WA", "MT", "ND", "MN", "AR", "LA", "IA", "MI", "IL", "IN", "OH", "KY", "WV", "DC", "MD", "DE", "CT", "NJ", "PA", "CT", "RI", "MA", "NH", "VT", "NY")
+bin_labels <- c("$1,120 - $1,450", "$1,451 - $1,660", "$1,661 - $2,020", "$2,021 - $2,460", "$2,461 - $5,020")
+
+mapped_pc <- ggplot(data=joined) + 
+  geom_sf(aes(fill = (bins)),color="black", size=1.5) + 
+  geom_sf(data = filter(joined, STUSPS %in% expanded), 
+          aes(fill = bins), 
+          color="#974ea2", size=2, show.legend = FALSE) +
+  annotate(geom = "text", 
+           x = -65, 
+           y = 35, 
+           label = "States Outlined in Purple Expanded\nMedicaid by the Beginning of 2018", 
+           size = 6) + 
+  coord_sf(xlim = c(-130, -65), 
+           ylim = c(20, 50), 
+           expand = FALSE) +
+  scale_fill_brewer(name="Per Capita\nFederal Grant", 
+                    palette = "Greens",
+                    type = "div",  
+                    labels = bin_labels) +
+  iltheme + 
+  theme(axis.line = element_blank(),
+        legend.background = element_rect(size=1, 
+                                         linetype="solid", 
+                                         colour ="black"),
+        panel.background = element_rect(fill = NA, size = .2),
+        legend.position=c(.9, .2)) + xlab("Longitude") + ylab("Latitude")
+
+column_pc <- ggplot(data = joined, aes(x = reorder(STUSPS, -`2018 grant per capita`), y = `2018 grant per capita`)) + 
+  geom_col(aes(fill = bins), color="black") + 
+  geom_col(data = filter(joined, STUSPS %in% expanded), 
+          aes(fill = bins, labels=STUSPS), 
+          color="#974ea2", size=1.2) +
+  iltheme +  
+  scale_fill_brewer(name="Per Capita\nFederal Grant", 
+                    palette = "Greens",
+                    type = "div",  
+                    labels = bin_labels) +
+  scale_y_continuous(name="Amount", 
+                     labels = scales::dollar_format(),
+                     expand = c(0,0)) +
+  scale_x_discrete(name="State") +
+  theme(axis.text.x.bottom = element_text(angle = 90),
+        panel.grid = element_blank(), 
+        axis.text.x = element_text(size=16),
+        legend.background = element_rect(size=1, 
+                                         linetype="solid", 
+                                         colour ="black"),
+        panel.background = element_rect(fill = NA, size = 1),
+        panel.ontop = TRUE, 
+        legend.position=c(.8, .6))
+
+multiplot <- ggplot() + coord_equal(xlim = c(0, 4), 
+                       ylim = c(0, 4), expand = FALSE) + 
+  annotation_custom(ggplotGrob(mapped_pc), xmin = 0, xmax = 4, 
+                    ymin = 2, ymax = 4) +
+  annotation_custom(ggplotGrob(column_pc), xmin = 0, xmax = 4, 
+                    ymin = 0, ymax = 2)
+
+ggsave("visuals/PerCapMap.pdf", plot = mapped_pc)
+ggsave("visuals/MulttiPerCapMap.pdf", plot = multiplot)
+ggsave("visuals/ColumnPerCapMap.pdf", plot = column_pc, width = 11, heigh = 8.5)
+
+
+multiplot
 ```
