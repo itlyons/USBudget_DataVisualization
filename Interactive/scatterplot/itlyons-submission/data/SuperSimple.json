@@ -1,0 +1,27 @@
+[{"SpendCategory": "Defense", "amount": 664158, "year": 2019}
+                ,{"SpendCategory": "Nondefense", "amount": 669892, "year": 2019}
+                ,{"SpendCategory": "Medicaid", "amount": 405935, "year": 2019}
+                ,{"SpendCategory": "Medicare", "amount": 768066, "year": 2019}
+                ,{"SpendCategory": "Net Interest", "amount": 383489, "year": 2019}
+                ,{"SpendCategory": "Offsetting receipts", "amount": -282638, "year": 2019}
+                ,{"SpendCategory": "Other Spending", "amount": 764250, "year": 2019}
+                ,{"SpendCategory": "Social Security", "amount": 1039092, "year": 2019}
+
+                ,{"SpendCategory": "Defense", "amount": 675224, "year": 2023}
+                ,{"SpendCategory": "Nondefense", "amount": 663273, "year": 2023}
+                ,{"SpendCategory": "Medicaid", "amount": 496441, "year": 2023}
+                ,{"SpendCategory": "Medicare", "amount": 1024176, "year": 2023}
+                ,{"SpendCategory": "Net Interest", "amount": 637413, "year": 2023}
+                ,{"SpendCategory": "Offsetting receipts", "amount": -320465, "year": 2023}
+                ,{"SpendCategory": "Other Spending", "amount": 847929, "year": 2023}
+                ,{"SpendCategory": "Social Security", "amount": 1322779, "year": 2023}
+
+                ,{"SpendCategory": "Defense", "amount": 740392, "year": 2027}
+                ,{"SpendCategory": "Nondefense", "amount": 724210, "year": 2027}
+                ,{"SpendCategory": "Medicaid", "amount": 625803, "year": 2027}
+                ,{"SpendCategory": "Medicare", "amount": 1354566, "year": 2027}
+                ,{"SpendCategory": "Net Interest", "amount": 821122, "year": 2027}
+                ,{"SpendCategory": "Offsetting receipts", "amount": -399759, "year": 2027}
+                ,{"SpendCategory": "Other Spending", "amount": 916201, "year": 2027}
+                ,{"SpendCategory": "Social Security", "amount": 1663960, "year": 2027}
+                ]

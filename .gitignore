@@ -39,3 +39,5 @@ rsconnect/
 build/
 node_modules
 npm-debug.log
+Interactive/node_modules
+

@@ -1,0 +1,17 @@
+html,
+
+
+.circ { 
+    stroke-width: 0;
+    fill: #1696d2;
+    opacity: 0.6;
+    stroke-linecap: round;
+ },
+
+body {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+
+
