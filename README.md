@@ -1,5 +1,6 @@
 # US Budget Data Visualization
-[The Latest](https://itlyons.github.io/USBudget_DataVisualization/Final_Static_Portfolio.html)  
+[D3.js Interactive Visualization](https://itlyons.github.io/USBudget_DataVisualization/Interactive/new-scaffold/app/index.html)  
+[Final Static Portfolio](https://itlyons.github.io/USBudget_DataVisualization/Final_Static_Portfolio.html)  
 This repository will contain detailed visualizations of US federal government spending and revenues over time. 
 
 I am interested in explaining the following topics:
