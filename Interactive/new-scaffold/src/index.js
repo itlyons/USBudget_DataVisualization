@@ -19,20 +19,16 @@ domReady(() => {
 function Visify(data) {
   // portrait
     const width = 1000;
-    const height = 36 / 24 * width;
+    const height = 24 / 36 * width;
 
-    var margin = {left: 20,
+    var margin = {left: 50,
                 right: 20,
                 top: 20,
                 bottom: 20
                 };
+
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.bottom - margin.top;
-
-/*    var svg = select("body")
-                .append("svg")
-                .attr("width", width)
-                .attr("height", height); */
 
     const svg = select('.vis-container')
                     .attr('width', width)
@@ -43,20 +39,32 @@ function Visify(data) {
     var xScale = scaleLinear()
                         .domain([d3.min(data, function(d) { return d.year; }),
                             d3.max(data, function(d) { return d.year; })])
-                        .range([0, width])
+                        .range([0, plotWidth])
                         .nice();
 
     var yScale = scaleLinear()
                         .domain([d3.min(data, function(d) { return d.amount; }),
                             d3.max(data, function(d) { return d.amount; })])
-                        .range([height, 0])
+                        .range([plotHeight, 0])
                         .nice();
 
     const color = d3.scaleOrdinal(d3.schemeDark2);
-    //Create SVG
+
+    svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', 'translate(10,' + plotHeight + ')')
+        .call(d3.axisBottom(xScale)
+        .tickFormat(d3.format("d")));
+
+    svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', 'translate(10,0)')
+        .call(d3.axisLeft(yScale)
+        .tickFormat(d3.format("$.0s"))
+    );
 
 
-  console.log(data)
-  console.log('Hi! My name is Ian and Im changing things.')
-  // EXAMPLE FIRST FUNCTION
+  console.table(data)
+  console.log()
+  
 }
