@@ -500,7 +500,7 @@ rev_share
 
 # How is departmental and agency spending categorized?
 
-It's informative to note which agencies and/or departments of the federal government are authorized as mandatory spending, which does not have to  be reauthorized every year. On the flip side, some agencies are almost completely discretionary, like the Department of Defense's military . 
+It's informative to note which agencies and/or departments of the federal government are authorized as mandatory spending, which does not have to  be reauthorized every year. The Department of Health and Human Services, which contains Medicare and Medicaid spending, ranks as the biggest spender, and its spending is almost entirely mandatory. The same goes for the Social Security Administration. On the flip side, some agencies are almost completely discretionary, like the Department of Defense's military programs expenditures, the Department of Transportation, and NASA. 
 
 ```{r Proportion Mandatory, echo=FALSE, message=FALSE, warning=FALSE}
 spendtype <- budget_longform %>% 
