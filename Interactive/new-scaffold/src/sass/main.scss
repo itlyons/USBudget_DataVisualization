@@ -8,13 +8,22 @@ body {
 .axis {
   font-family: "Verdana";
   font-size: 10px;
+  shape-rendering: crispEdges;
   }
+
+.ylabel {
+    font-family: "Verdana";
+}
+
+.chart-title {
+    font-family: "Verdana";
+}
 
 path.line:hover {
    stroke-width: 3.0px;
  }
 
- path.line {
+path.line {
    fill: none;
    stroke: #666;
    stroke-width: 1.5px;
@@ -23,7 +32,7 @@ path.line:hover {
  path.area {
    fill: #e7e7e7;
  }
- 
+
  .grid line {
    stroke: lightgrey;
    stroke-opacity: 0.7;
@@ -32,9 +41,5 @@ path.line:hover {
 
  .grid path {
    stroke-width: 0;
- }
-
- .axis {
-   shape-rendering: crispEdges;
  }
 // PUT ALL OF YOUR STYLES HERE IN THE SCSS FILE AND NO WHERE ELSE!!!!

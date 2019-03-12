@@ -67,6 +67,7 @@ function Visify(data) {
 
     svg.append("text")
         .attr("transform", "rotate(-90)")
+        .attr('class', 'ylabel')
         .attr("y", 0 - margin.left)
         .attr("x", 0 - (height / 2))
         .attr("dy", "1em")
@@ -119,7 +120,7 @@ function Visify(data) {
       // Add line for this year (actual vs cbo projected)
       var todayX = xScale(2019);
 
-      lineHolder.append('line')
+      var todayLine = lineHolder.append('line')
                   .attr('class', 'date-marker')
                   .attr('x1', todayX)
                   .attr('y1', plotHeight)
@@ -129,6 +130,9 @@ function Visify(data) {
                   .style("stroke", "red")
                   .style("stroke-dasharray", ("3, 3"))
                   .style("fill", "none");
+        // To-do: Add label for 2019 marker ^^
+
+
 
     var curtain = svg.append('rect')
         .attr('class', 'curtain')
@@ -154,10 +158,9 @@ function Visify(data) {
             .style("text-decoration", "bold")
             .text("Revenues Stagnate, and Debt Grows");
 
-
-        // https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
-        // The gridlines code was borrowed from the above address with
-        // minimal modification.
+    // https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
+    // The gridlines code was borrowed from the above address with
+    // minimal modification.
     // gridlines in x axis function
     function make_x_gridlines() {
         return d3.axisBottom(xScale)
@@ -187,7 +190,6 @@ function Visify(data) {
               .tickSize(-plotWidth)
               .tickFormat("")
           );
-    // To-do: Add label for 2019 marker ^^
 
 /*
     var legend = svg.append("g")
