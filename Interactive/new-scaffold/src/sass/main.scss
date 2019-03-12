@@ -23,6 +23,16 @@ path.line:hover {
  path.area {
    fill: #e7e7e7;
  }
+ 
+ .grid line {
+   stroke: lightgrey;
+   stroke-opacity: 0.7;
+   shape-rendering: crispEdges;
+ }
+
+ .grid path {
+   stroke-width: 0;
+ }
 
  .axis {
    shape-rendering: crispEdges;

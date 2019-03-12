@@ -116,6 +116,20 @@ function Visify(data) {
               return line(d);
           });
 
+      // Add line for this year (actual vs cbo projected)
+      var todayX = xScale(2019);
+
+      lineHolder.append('line')
+                  .attr('class', 'date-marker')
+                  .attr('x1', todayX)
+                  .attr('y1', plotHeight)
+                  .attr('x2', todayX)
+                  .attr('y2', 0)
+                  .style("stroke-width", 1)
+                  .style("stroke", "red")
+                  .style("stroke-dasharray", ("3, 3"))
+                  .style("fill", "none");
+
     var curtain = svg.append('rect')
         .attr('class', 'curtain')
         .attr('x', 12)
@@ -140,20 +154,39 @@ function Visify(data) {
             .style("text-decoration", "bold")
             .text("Revenues Stagnate, and Debt Grows");
 
-    // Add line for this year (actual vs cbo projected)
-    var todayX = xScale(2019);
 
-    lineHolder.append('line')
-                .attr('class', 'date-marker')
-                .attr('x1', todayX)
-                .attr('y1', plotHeight)
-                .attr('x2', todayX)
-                .attr('y2', 0)
-                .style("stroke-width", 1)
-                .style("stroke", "red")
-                .style("stroke-dasharray", ("3, 3"))
-                .style("fill", "none");
+        // https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
+        // The gridlines code was borrowed from the above address with
+        // minimal modification.
+    // gridlines in x axis function
+    function make_x_gridlines() {
+        return d3.axisBottom(xScale)
+            .ticks(5)
+    }
 
+    // gridlines in y axis function
+    function make_y_gridlines() {
+        return d3.axisLeft(yScale)
+            .ticks(5)
+    }
+
+      // add the X gridlines
+      svg.append("g")
+          .attr("class", "grid")
+          .attr("transform", "translate(10," + plotHeight + ")")
+          .call(make_x_gridlines()
+              .tickSize(-plotHeight)
+              .tickFormat("")
+          );
+
+      // add the Y gridlines
+      svg.append("g")
+          .attr("class", "grid")
+          .attr("transform", "translate(10," + 0 + ")")
+          .call(make_y_gridlines()
+              .tickSize(-plotWidth)
+              .tickFormat("")
+          );
     // To-do: Add label for 2019 marker ^^
 
 /*
