@@ -265,10 +265,13 @@ function Visify(data) {
           .style("fill", function(d) {
              var boxColor = color(d);
              return boxColor;
-          });
+          })
+          .append('text')
+          .attr('class', 'legendtext')
+          .style('text-anchor', 'left')
+          .attr("x", plotWidth*.01)
+          .attr("y", function(d, i){ return i *  20;})
+          .text(d => d);
 
-
-
-
-  console.log(color.domain())
+  console.log()
 }

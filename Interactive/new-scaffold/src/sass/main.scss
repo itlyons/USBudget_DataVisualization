@@ -4,7 +4,10 @@ body {
   display: flex;
   flex-direction: column;
 }
-
+.legendtext {
+    font-family: "Verdana";
+    font-size: 10px;
+}
 .axis {
   font-family: "Verdana";
   font-size: 10px;
