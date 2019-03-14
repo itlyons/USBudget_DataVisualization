@@ -19,10 +19,15 @@ body {
     font-family: "Verdana";
 }
 
+.annotation {
+    font-family: "Verdana";
+    font-size:16px;
+}
+/*
 path.line:hover {
    stroke-width: 3.0px;
  }
-
+*/
 path.line {
    fill: none;
    stroke: #666;
@@ -42,4 +47,26 @@ path.line {
  .grid path {
    stroke-width: 0;
  }
+
+.lineHolder {
+  fill: none;
+  pointer-events: all;
+}
+
+.focus circle {
+  fill: #F1F3F3;
+  stroke: #000000;
+  stroke-width: 1px;
+}
+.focus text {
+    font-family: "Verdana";
+    font-size:12px;
+    fill: purple;
+}
+
+.hover-line {
+  stroke: #000000;
+  stroke-width: 1px;
+  stroke-dasharray: 3,3;
+}
 // PUT ALL OF YOUR STYLES HERE IN THE SCSS FILE AND NO WHERE ELSE!!!!

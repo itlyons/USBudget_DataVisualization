@@ -1,22 +1,21 @@
 
 const domReady = require('domready');
 var d3Transition = require("d3-transition");
-import {select} from 'd3-selection';
+import {select, event} from 'd3-selection';
 import {interpolateInferno} from 'd3-scale-chromatic';
 import {scaleOrdinal, scaleTime, scaleLinear} from 'd3-scale';
 import {timeFormat} from 'd3-time-format';
 import {line} from 'd3-shape';
 import {axisBottom, axisRight} from 'd3-axis';
 import {annotation, annotationCalloutCircle} from 'd3-svg-annotation';
+var annotate = require('d3-svg-annotation');
 var d3 = require("d3");
-
 
 domReady(() => {
     fetch('data/cboSpend.json')
     .then(response => response.json())
     .then(data => Visify(data));
-});
-
+    });
 
 /*
 domReady(() => {
@@ -25,11 +24,11 @@ domReady(() => {
         });
 */
 function Visify(data) {
-  // portrait
+
     const width = 999;
     const height = 24 / 36 * width;
 
-    var margin = {left: 60,
+    const margin = {left: 60,
                 right: 20,
                 top: 40,
                 bottom: 20
@@ -55,7 +54,13 @@ function Visify(data) {
                         .range([plotHeight, 0])
                         .nice();
 
-    const color = d3.scaleOrdinal(d3.schemeDark2);
+    var cats = ['Debt Held by the Public','Total Spending', 'Total Revenues'
+    , 'Social Security', 'Federal Spending on Major Health Care Programsa',
+    'Other Noninterest Spending', 'Net Interest']
+
+    const color = d3.scaleOrdinal(/*d3.schemeDark2*/)
+                    .domain(cats)
+                    .range(d3.schemeDark2);
 
     var yFormat = d3.axisBottom(xScale)
                 .tickFormat(d3.format("d"));
@@ -102,20 +107,36 @@ function Visify(data) {
 
     var lineHolder = svg.append("g").attr("transform", "translate(10,0)")
         .attr('class', 'line-holder');
-
+ //***********************************************************************//
     lineHolder.selectAll(".line")
-            .data(subset)
-                .enter()
-            .append("path")
-            .attr('class', 'line')
-            .style('stroke', function(d) {
-              return color(Math.random() * 50);
-          }) // This was borrowed from a website that I now can't find.
-          // Have to find a way to map the colors I want to the categories.
-            .attr('clip-path', 'url(#clip)')
-            .attr('d', function(d) {
-              return line(d);
-          });
+        .data(subset)
+            .enter()
+        .append("path")
+        .attr('class', 'line')
+        .style('stroke', (d => color(d[0].Category)))
+        .attr('clip-path', 'url(#clip)')
+        .attr('d', (d => line(d)))
+        .on("mouseover", function() { focus.style("display", null); })
+        .on("mousemove", function(d) {
+            var xPosition = d3.mouse(this)[0];
+            var yPosition = d3.mouse(this)[1];
+            var ttYear = xScale.invert(xPosition).toFixed(0)
+            var ttPct = (yScale.invert(yPosition)*100).toFixed(2)
+            focus.attr("transform","translate(" +xPosition + "," + yPosition + ")")
+                .style('opacity', 1);
+            focus.select("text")
+                .text("Year: " + ttYear + ", Percent of GDP: " + ttPct + '%')
+                .attr("fill", "black")
+                .style('opacity', 1)
+            })
+         .on('mouseout', function() { focusText.style('opacity', 0);
+                                    focus.style('opacity', 0);
+            });
+
+    function tooltip() {
+
+    }
+
 
       // Add line for this year (actual vs cbo projected)
       var todayX = xScale(2019);
@@ -130,9 +151,23 @@ function Visify(data) {
                   .style("stroke", "red")
                   .style("stroke-dasharray", ("3, 3"))
                   .style("fill", "none");
-        // To-do: Add label for 2019 marker ^^
+// button --> change class of line you are choosing to not have delete class
+// remove lines, and func that undoes it
 
+    // Add labels for 2019 marker
+    svg.append("text")
+            .attr('class', 'annotation')
+            .attr("x", todayX+25)
+            .attr("y", plotHeight*0.25)
+            .attr("text-anchor", "right")
+            .text("CBO Projection -->");
 
+    svg.append("text")
+            .attr('class', 'annotation')
+            .attr("x", todayX-75)
+            .attr("y", plotHeight*0.25)
+            .attr("text-anchor", "left")
+            .text("<-- Actual");
 
     var curtain = svg.append('rect')
         .attr('class', 'curtain')
@@ -144,52 +179,74 @@ function Visify(data) {
 
     svg.select('rect.curtain')
         .transition()
-        .duration(5000)
+        .duration(4000)
         .ease(d3.easeLinear)
         .attr('x', plotWidth);
 
     // Add chart title
     svg.append("text")
-            .attr('class', 'chart-title')
-            .attr("x", (width / 2))
-            .attr("y", 0 - (margin.top / 2))
-            .attr("text-anchor", "middle")
-            .style("font-size", "24px")
-            .style("text-decoration", "bold")
-            .text("Revenues Stagnate, and Debt Grows");
+        .attr('class', 'chart-title')
+        .attr("x", (width / 2))
+        .attr("y", 0 - (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("font-size", "24px")
+        .style("text-decoration", "bold")
+        .text("Revenues Stagnate, and Debt Grows");
+
 
     // https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
     // The gridlines code was borrowed from the above address with
     // minimal modification.
-    // gridlines in x axis function
-    function make_x_gridlines() {
-        return d3.axisBottom(xScale)
-            .ticks(5)
+    function make_grid() {
+        // gridlines in x axis function
+        function make_x_gridlines() {
+            return d3.axisBottom(xScale)
+                .ticks(5)}
+        // gridlines in y axis function
+        function make_y_gridlines() {
+            return d3.axisLeft(yScale)
+                .ticks(5)}
+          // add the X gridlines
+        svg.append("g")
+              .attr("class", "grid")
+              .attr("transform", "translate(10," + plotHeight + ")")
+              .call(make_x_gridlines()
+                  .tickSize(-plotHeight)
+                  .tickFormat(""));
+          // add the Y gridlines
+        svg.append("g")
+            .attr("class", "grid")
+            .attr("transform", "translate(10," + 0 + ")")
+            .call(make_y_gridlines()
+                .tickSize(-plotWidth)
+                .tickFormat(""));
     }
+    make_grid();
 
-    // gridlines in y axis function
-    function make_y_gridlines() {
-        return d3.axisLeft(yScale)
-            .ticks(5)
-    }
 
-      // add the X gridlines
-      svg.append("g")
-          .attr("class", "grid")
-          .attr("transform", "translate(10," + plotHeight + ")")
-          .call(make_x_gridlines()
-              .tickSize(-plotHeight)
-              .tickFormat("")
-          );
 
-      // add the Y gridlines
-      svg.append("g")
-          .attr("class", "grid")
-          .attr("transform", "translate(10," + 0 + ")")
-          .call(make_y_gridlines()
-              .tickSize(-plotWidth)
-              .tickFormat("")
-          );
+      var focus = svg.append("g")
+          .attr("class", "focus")
+          .style("display", "none")
+          ;
+
+      var focusX = focus.append("line")
+          .attr("class", "x-hover-line hover-line")
+          .attr("y1", 0)
+          .attr("y2", plotHeight);
+
+      var focusY = focus.append("line")
+          .attr("class", "y-hover-line hover-line")
+          .attr("x1", -plotWidth)
+          .attr("x2", 0);
+
+      var focusCirc = focus.append("circle")
+          .attr("r", 5.0);
+
+      var focusText = focus.append("text")
+            .attr("x", 15)
+            .attr("dy", ".31em")
+            .style('opacity', 0);
 
 /*
     var legend = svg.append("g")
@@ -198,6 +255,5 @@ function Visify(data) {
               .style("font-size","12px");
 */
 
-  console.table(data)
   console.log()
 }
