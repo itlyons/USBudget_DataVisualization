@@ -248,12 +248,27 @@ function Visify(data) {
             .attr("dy", ".31em")
             .style('opacity', 0);
 
-/*
+
     var legend = svg.append("g")
               .attr("class","legend")
-              .attr("transform","translate(50,30)")
+              .attr("transform","translate(50,50)")
               .style("font-size","12px");
-*/
 
-  console.log()
+    legend.selectAll('rect')
+        .data(color.domain())
+        .enter()
+        .append("rect")
+          .attr("x", plotWidth *.01)
+          .attr("y", function(d, i){ return i *  20;})
+          .attr("width", 18)
+          .attr("height", 18)
+          .style("fill", function(d) {
+             var boxColor = color(d);
+             return boxColor;
+          });
+
+
+
+
+  console.log(color.domain())
 }
