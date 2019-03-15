@@ -80,16 +80,16 @@ function Visify(data) {
         .text("Percent of GDP");
 
     var xFormat = d3.axisLeft(yScale)
-                .tickFormat(d3.format(".2%"));
+                .tickFormat(d3.format(".0%"));
 
     svg.append('g')
         .attr('class', 'axis')
-        .attr('transform', 'translate(10,0)')
+        .attr('transform', 'translate(0,0)')
         .call(xFormat);
 
     // Create a line generator
     var line = d3.line()
-        .curve(d3.curveMonotoneX)
+        .curve(d3.curveLinear)
         .x(function(d) { return xScale(d.Year); })
         .y(function(d) { return yScale(d.pctgdp); });
 
@@ -120,8 +120,8 @@ function Visify(data) {
         .on("mousemove", function(d) {
             var xPosition = d3.mouse(this)[0];
             var yPosition = d3.mouse(this)[1];
-            var ttYear = xScale.invert(xPosition).toFixed(0)
-            var ttPct = (yScale.invert(yPosition)*100).toFixed(2)
+            var ttYear = (xScale.invert(xPosition)).toFixed(0)
+            var ttPct = (yScale.invert(yPosition)*100).toFixed(0)
             focus.attr("transform","translate(" +xPosition + "," + yPosition + ")")
                 .style('opacity', 1);
             focus.select("text")
@@ -133,24 +133,19 @@ function Visify(data) {
                                     focus.style('opacity', 0);
             });
 
-    function tooltip() {
-
-    }
-
-
       // Add line for this year (actual vs cbo projected)
       var todayX = xScale(2019);
 
       var todayLine = lineHolder.append('line')
-                  .attr('class', 'date-marker')
-                  .attr('x1', todayX)
-                  .attr('y1', plotHeight)
-                  .attr('x2', todayX)
-                  .attr('y2', 0)
-                  .style("stroke-width", 1)
-                  .style("stroke", "red")
-                  .style("stroke-dasharray", ("3, 3"))
-                  .style("fill", "none");
+                          .attr('class', 'date-marker')
+                          .attr('x1', todayX)
+                          .attr('y1', plotHeight)
+                          .attr('x2', todayX)
+                          .attr('y2', 0)
+                          .style("stroke-width", 1)
+                          .style("stroke", "red")
+                          .style("stroke-dasharray", ("3, 3"))
+                          .style("fill", "none");
 // button --> change class of line you are choosing to not have delete class
 // remove lines, and func that undoes it
 
@@ -164,7 +159,7 @@ function Visify(data) {
 
     svg.append("text")
             .attr('class', 'annotation')
-            .attr("x", todayX-75)
+            .attr("x", todayX-90)
             .attr("y", plotHeight*0.25)
             .attr("text-anchor", "left")
             .text("<-- Actual");
@@ -247,7 +242,6 @@ function Visify(data) {
             .attr("x", 15)
             .attr("dy", ".31em")
             .style('opacity', 0);
-
 
     var legend = svg.append("g")
               .attr("class","legend")
