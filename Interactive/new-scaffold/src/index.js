@@ -26,10 +26,10 @@ domReady(() => {
 function Visify(data) {
 
     const width = 999;
-    const height = 24 / 36 * width;
+    const height = 1.9/3 * width;
 
     const margin = {left: 60,
-                right: 20,
+                right: 80,
                 top: 40,
                 bottom: 20
                 };
@@ -54,11 +54,11 @@ function Visify(data) {
                         .range([plotHeight, 0])
                         .nice();
 
-    var cats = ['Debt Held by the Public','Total Spending', 'Total Revenues'
-    , 'Social Security', 'Federal Spending on Major Health Care Programsa',
+    var cats = ['Publicly Held Debt','Total Spending', 'Total Revenues'
+    , 'Social Security', 'Federal Healthcare Spending',
     'Other Noninterest Spending', 'Net Interest']
 
-    const color = d3.scaleOrdinal(/*d3.schemeDark2*/)
+    const color = d3.scaleOrdinal()
                     .domain(cats)
                     .range(d3.schemeDark2);
 
@@ -67,7 +67,7 @@ function Visify(data) {
 
     svg.append('g')
         .attr('class', 'axis')
-        .attr('transform', 'translate(10,' + plotHeight + ')')
+        .attr('transform', 'translate(0,' + plotHeight + ')')
         .call(yFormat);
 
     svg.append("text")
@@ -87,7 +87,7 @@ function Visify(data) {
         .attr('transform', 'translate(0,0)')
         .call(xFormat);
 
-    // Create a line generator
+    //          Create a line generator         //
     var line = d3.line()
         .curve(d3.curveLinear)
         .x(function(d) { return xScale(d.Year); })
@@ -100,12 +100,12 @@ function Visify(data) {
             .attr("height", plotHeight);
 
     // Only look at the toplines for now
-    var subset = [(data.filter(d => d.Category=="Debt Held by the Public")),
+    var subset = [(data.filter(d => d.Category=="Publicly Held Debt")),
                     (data.filter(d => d.Category=="Total Spending")),
                     (data.filter(d => d.Category=="Total Revenues"))
                 ];
 
-    var lineHolder = svg.append("g").attr("transform", "translate(10,0)")
+    var lineHolder = svg.append("g").attr("transform", "translate(0,0)")
         .attr('class', 'line-holder');
  //***********************************************************************//
     lineHolder.selectAll(".line")
@@ -129,13 +129,17 @@ function Visify(data) {
                 .attr("fill", "black")
                 .style('opacity', 1)
             })
-         .on('mouseout', function() { focusText.style('opacity', 0);
-                                    focus.style('opacity', 0);
+         .on('mouseout', function() {
+                            focusText.transition()
+                                .delay(1500)
+                                .style('opacity', 0);
+                            focus.transition()
+                                .delay(1500)
+                                .style('opacity', 0);
             });
 
       // Add line for this year (actual vs cbo projected)
       var todayX = xScale(2019);
-
       var todayLine = lineHolder.append('line')
                           .attr('class', 'date-marker')
                           .attr('x1', todayX)
@@ -153,14 +157,14 @@ function Visify(data) {
     svg.append("text")
             .attr('class', 'annotation')
             .attr("x", todayX+25)
-            .attr("y", plotHeight*0.25)
+            .attr("y", plotHeight*0.35)
             .attr("text-anchor", "right")
             .text("CBO Projection -->");
 
     svg.append("text")
             .attr('class', 'annotation')
             .attr("x", todayX-90)
-            .attr("y", plotHeight*0.25)
+            .attr("y", plotHeight*0.35)
             .attr("text-anchor", "left")
             .text("<-- Actual");
 
@@ -176,7 +180,7 @@ function Visify(data) {
         .transition()
         .duration(4000)
         .ease(d3.easeLinear)
-        .attr('x', plotWidth);
+        .attr('x', plotWidth*2);
 
     // Add chart title
     svg.append("text")
@@ -204,14 +208,14 @@ function Visify(data) {
           // add the X gridlines
         svg.append("g")
               .attr("class", "grid")
-              .attr("transform", "translate(10," + plotHeight + ")")
+              .attr("transform", "translate(0," + plotHeight + ")")
               .call(make_x_gridlines()
                   .tickSize(-plotHeight)
                   .tickFormat(""));
           // add the Y gridlines
         svg.append("g")
             .attr("class", "grid")
-            .attr("transform", "translate(10," + 0 + ")")
+            .attr("transform", "translate(0," + 0 + ")")
             .call(make_y_gridlines()
                 .tickSize(-plotWidth)
                 .tickFormat(""));
@@ -243,15 +247,19 @@ function Visify(data) {
             .attr("dy", ".31em")
             .style('opacity', 0);
 
+//****************** <LEGEND TIME> ******************
+//***************************************************
     var legend = svg.append("g")
               .attr("class","legend")
               .attr("transform","translate(50,50)")
               .style("font-size","12px");
 
+    // Add the legend's colored boxes.
     legend.selectAll('rect')
         .data(color.domain())
         .enter()
         .append("rect")
+          .attr('class', 'legendBox')
           .attr("x", plotWidth *.01)
           .attr("y", function(d, i){ return i *  20;})
           .attr("width", 18)
@@ -259,13 +267,26 @@ function Visify(data) {
           .style("fill", function(d) {
              var boxColor = color(d);
              return boxColor;
-          })
-          .append('text')
-          .attr('class', 'legendtext')
-          .style('text-anchor', 'left')
-          .attr("x", plotWidth*.01)
-          .attr("y", function(d, i){ return i *  20;})
-          .text(d => d);
+         });
+
+    // Add the labels to the legend positioned next to the boxes.
+    legend.selectAll('text')
+        .data(color.domain())
+        .enter()
+        .append("text")
+            .attr('class', 'legendtext')
+            .style('text-anchor', 'left')
+            .attr("x", 20+ plotWidth*.01)
+            .attr("y", function(d, i){ return (i * 20)+13;})
+            .text(function(d){
+                var catLabel = d;
+                return [catLabel];
+            })
+            .attr("fill", "black")
+            .style('opacity', 1);
+//****************** </LEGEND TIME> ******************
+//****************************************************
+
 
   console.log()
 }
