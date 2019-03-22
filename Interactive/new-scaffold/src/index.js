@@ -24,23 +24,37 @@ domReady(() => {
         });
 */
 
-
 function Visify(allData, whatChart) {
-    const chart_dict = [{'Chart':'Overview'}]
-    console.log(whatChart)
-    var allData = allData
-    var indexer = function indexizer(whatChart) {
-        if (whatChart === 'Overview')
-            {return 0}
-        if (whatChart === 'CBO Spending')
-            {return 1}
-        else {return 0};
-        }
-    var indexer = indexer(whatChart)
-    console.log(indexer)
 
-    var data = allData[indexer]
-    console.log(data)
+    var [overviewData, spendData] = allData;
+
+    var chooseData = function indexizer(overviewData, spendData, whatChart) {
+        if (whatChart === 'Overview')
+            {var lineData = [(overviewData.filter(d => d.Category==='Publicly Held Debt')),
+                            (overviewData.filter(d => d.Category==='Total Spending')),
+                            (overviewData.filter(d => d.Category==='Total Revenues'))
+                                ];
+            return [overviewData, lineData]}
+        if (whatChart === 'CBO Spending')
+            {var lineData = [(spendData.filter(d => d.Category==='Discretionary')),
+                            (spendData.filter(d => d.Category==='Mandatory')),
+                            (spendData.filter(d => d.Category==='Net Interest'))
+                            ];
+            return [spendData, lineData]}
+        else {
+            var lineData = [(overviewData.filter(d => d.Category==='Publicly Held Debt')),
+                            (overviewData.filter(d => d.Category==='Total Spending')),
+                            (overviewData.filter(d => d.Category==='Total Revenues'))
+                        ];
+            return [overviewData, lineData]};
+        }
+
+    var [data, lineData] = chooseData(overviewData, spendData, whatChart)
+    // console.log('HERE', data, lineData)
+
+    var uniqCats = d3.set(data, function(d) {return d.Category});
+    var uniqCats = uniqCats.values();
+
     const width = 999;
     const height = 1.9/3 * width;
 
@@ -53,7 +67,6 @@ function Visify(allData, whatChart) {
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.bottom - margin.top;
 
-    var whatChart = 'overview'
     const svg = select('.vis-container')
                     .attr('width', width)
                     .attr('height', height)
@@ -72,6 +85,7 @@ function Visify(allData, whatChart) {
                         .range([plotHeight, 0])
                         .nice();
 
+    // Meow
     var cats = ['Publicly Held Debt','Total Spending', 'Total Revenues',
                 'Discretionary', 'Mandatory', 'Net Interest']
 
@@ -120,17 +134,11 @@ function Visify(allData, whatChart) {
             .attr('width', plotWidth)
             .attr('height', plotHeight);
 
-    // Only look at the toplines for now
-    var subset = [(data.filter(d => d.Category=='Publicly Held Debt')),
-                    (data.filter(d => d.Category=='Total Spending')),
-                    (data.filter(d => d.Category=='Total Revenues'))
-                ];
-
     var lineHolder = svg.append('g').attr('transform', 'translate(0,0)')
         .attr('class', 'line-holder');
  //***********************************************************************//
     lineHolder.selectAll('.line')
-        .data(subset)
+        .data(lineData)
             .enter()
         .append('path')
         .attr('class', 'line')
@@ -283,7 +291,7 @@ function Visify(allData, whatChart) {
 
     // Add the legend's colored boxes.
     legend.selectAll('rect')
-        .data(color.domain())
+        .data(uniqCats)
         .enter()
         .append('rect')
           .attr('class', 'legendBox')
@@ -298,7 +306,7 @@ function Visify(allData, whatChart) {
 
     // Add the labels to the legend positioned next to the boxes.
     legend.selectAll('text')
-        .data(color.domain())
+        .data(uniqCats)
         .enter()
         .append('text')
             .attr('class', 'legendtext')
@@ -351,7 +359,11 @@ function Visify(allData, whatChart) {
     }
 
     function changeChart (d, inputValue) {
-        console.log(d, inputValue)
+        //console.log(d, inputValue)
+        function removeStuff() {
+            svg.transition()
+                .remove();};
+        removeStuff();
         Visify(allData, inputValue);
     }
 
@@ -367,7 +379,5 @@ function Visify(allData, whatChart) {
                 .style('opacity', 1)
                 .on('click', inputChange);
 
-
-    var uniqCats = d3.set(data, function(d) {return d.Category});
-    //console.log(uniqCats)
+    console.log(uniqCats)
 }
