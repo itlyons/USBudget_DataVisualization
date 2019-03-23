@@ -17,17 +17,12 @@ domReady(() => {
     .then(allData => Visify(allData));
     });
 
-/*
-domReady(() => {
-        d3.csv('data/cboSpend.csv')
-        .then(data => Visify(data));
-        });
-*/
 
 function Visify(allData, whatChart) {
-
     var [overviewData, spendData] = allData;
 
+    // Create a function that returns the data we want
+    // whatChart is set when the user clicks one of the button options
     var chooseData = function indexizer(overviewData, spendData, whatChart) {
         if (whatChart === 'Overview')
             {var lineData = [(overviewData.filter(d => d.Category==='Publicly Held Debt')),
@@ -35,12 +30,14 @@ function Visify(allData, whatChart) {
                             (overviewData.filter(d => d.Category==='Total Revenues'))
                                 ];
             return [overviewData, lineData]}
+
         if (whatChart === 'CBO Spending')
             {var lineData = [(spendData.filter(d => d.Category==='Discretionary')),
                             (spendData.filter(d => d.Category==='Mandatory')),
                             (spendData.filter(d => d.Category==='Net Interest'))
                             ];
             return [spendData, lineData]}
+
         else {
             var lineData = [(overviewData.filter(d => d.Category==='Publicly Held Debt')),
                             (overviewData.filter(d => d.Category==='Total Spending')),
@@ -49,17 +46,22 @@ function Visify(allData, whatChart) {
             return [overviewData, lineData]};
         }
 
+    // I created the original graph with the data subset
+    // That's why I set up the viz & plot the viz with differently formatted arrays
     var [data, lineData] = chooseData(overviewData, spendData, whatChart)
-    // console.log('HERE', data, lineData)
 
+    // Grab the UNIQUE categories from this particular chart
     var uniqCats = d3.set(data, function(d) {return d.Category});
     var uniqCats = uniqCats.values();
 
-    const width = 999;
-    const height = 1.9/3 * width;
+
+    //******************** SVG & SCALE SETUP ********************//
+    //********************                   ********************//
+    const width = 1200;
+    const height = 1.5/3 * width;
 
     const margin = {left: 60,
-                right: 80,
+                right: 120,
                 top: 40,
                 bottom: 20
                 };
@@ -85,14 +87,12 @@ function Visify(allData, whatChart) {
                         .range([plotHeight, 0])
                         .nice();
 
-    // Meow
+    // Meow. List all categories so that colors don't repeat.
     var cats = ['Publicly Held Debt','Total Spending', 'Total Revenues',
                 'Discretionary', 'Mandatory', 'Net Interest']
 
-
-//    , 'Social Security', 'Federal Healthcare Spending',
-//    'Other Noninterest Spending', 'Net Interest']
-
+                //    , 'Social Security', 'Federal Healthcare Spending',
+                //    'Other Noninterest Spending', 'Net Interest']
     const color = d3.scaleOrdinal()
                     .domain(cats)
                     .range(d3.schemeDark2);
@@ -121,6 +121,12 @@ function Visify(allData, whatChart) {
         .attr('class', 'axis')
         .attr('transform', 'translate(0,0)')
         .call(xFormat);
+    //********************                      ********************//
+    //******************** </SVG & SCALE SETUP> ********************//
+
+
+
+
 
     //          Create a line generator         //
     var line = d3.line()
@@ -145,24 +151,24 @@ function Visify(allData, whatChart) {
         .style('stroke', (d => (color(d[0].Category))))
         .attr('clip-path', 'url(#clip)')
         .attr('d', (d => line(d)))
-        .on('mouseover', function() { focus.style('display', null); })
+        .on('mouseover', function() { tooltip.style('display', null); })
         .on('mousemove', function(d) {
             var xPosition = d3.mouse(this)[0];
             var yPosition = d3.mouse(this)[1];
             var ttYear = (xScale.invert(xPosition)).toFixed(0)
             var ttPct = (yScale.invert(yPosition)*100).toFixed(0)
-            focus.attr('transform','translate(' +xPosition + ',' + yPosition + ')')
+            tooltip.attr('transform','translate(' +xPosition + ',' + yPosition + ')')
                 .style('opacity', 1);
-            focus.select('text')
+            tooltip.select('text')
                 .text('Year: ' + ttYear + ', Percent of GDP: ' + ttPct + '%')
                 .attr('fill', 'black')
                 .style('opacity', 1)
             })
          .on('mouseout', function() {
-                            focusText.transition()
+                            tooltipText.transition()
                                 .delay(1500)
                                 .style('opacity', 0);
-                            focus.transition()
+                            tooltip.transition()
                                 .delay(1500)
                                 .style('opacity', 0);
             });
@@ -179,11 +185,35 @@ function Visify(allData, whatChart) {
                           .style('stroke', 'red')
                           .style('stroke-dasharray', ('3, 3'))
                           .style('fill', 'none');
-// button --> change class of line you are choosing to not have delete class
-// remove lines, and func that undoes it
+
 
     var annos = svg.append('g').attr('class', 'random-text');
-    // Add labels for 2019 marker
+
+    function writeText(annos) {
+        if (whatChart === 'CBO Spending') {
+        ;}
+
+        else {
+            console.log(annos)
+            annos.append('text')
+                .attr('id', 'annoSpecial')
+                .attr('x', plotWidth*.65)
+                .attr('y', plotHeight*0.80)
+                .attr('text-anchor', 'left')
+                .text('CBO Projects Spending to Outpace Revenues');
+
+            annos.append('text')
+                .attr('transform', 'rotate(-25)')
+                .attr('id', 'annoSpecial')
+                .attr('x', plotWidth*.6)
+                .attr('y', plotHeight*.9)
+                .attr('text-anchor', 'left')
+                .text('Deficits Lead to Debt');
+        ;};
+    }
+
+    writeText(annos)
+    // Add labels for 2019 marker //
     annos.append('text')
             .attr('class', 'annotation')
             .attr('x', todayX+25)
@@ -197,6 +227,7 @@ function Visify(allData, whatChart) {
             .attr('y', plotHeight*0.35)
             .attr('text-anchor', 'left')
             .text('<-- Actual');
+
 
     var curtain = svg.append('rect')
         .attr('class', 'curtain')
@@ -221,6 +252,9 @@ function Visify(allData, whatChart) {
         .style('font-size', '24px')
         .style('text-decoration', 'bold')
         .text('Revenues Stagnate, and Debt Grows');
+
+
+
 
 
     // https://bl.ocks.org/d3noob/c506ac45617cf9ed39337f99f8511218
@@ -254,25 +288,26 @@ function Visify(allData, whatChart) {
 
 
 
-      var focus = svg.append('g')
-          .attr('class', 'focus')
+    // Add some things for the tooltip to work.
+    var tooltip = svg.append('g')
+          .attr('class', 'tooltip')
           .style('display', 'none')
           ;
 
-      var focusX = focus.append('line')
+      var tooltipX = tooltip.append('line')
           .attr('class', 'x-hover-line hover-line')
           .attr('y1', 0)
           .attr('y2', plotHeight);
 
-      var focusY = focus.append('line')
+      var tooltipY = tooltip.append('line')
           .attr('class', 'y-hover-line hover-line')
           .attr('x1', -plotWidth)
           .attr('x2', 0);
 
-      var focusCirc = focus.append('circle')
+      var tooltipCirc = tooltip.append('circle')
           .attr('r', 5.0);
 
-      var focusText = focus.append('text')
+      var tooltipText = tooltip.append('text')
             .attr('x', 15)
             .attr('dy', '.31em')
             .style('opacity', 0);
@@ -296,9 +331,9 @@ function Visify(allData, whatChart) {
         .append('rect')
           .attr('class', 'legendBox')
           .attr('x', plotWidth *.01)
-          .attr('y', function(d, i){ return i *  20;})
-          .attr('width', 18)
-          .attr('height', 18)
+          .attr('y', function(d, i){ return i *  26;})
+          .attr('width', 24)
+          .attr('height', 24)
           .style('fill', function(d) {
              var boxColor = color(d);
              return boxColor;
@@ -311,8 +346,8 @@ function Visify(allData, whatChart) {
         .append('text')
             .attr('class', 'legendtext')
             .style('text-anchor', 'left')
-            .attr('x', 20+ plotWidth*.01)
-            .attr('y', function(d, i){ return (i * 20)+13;})
+            .attr('x', 25+ plotWidth*.01)
+            .attr('y', function(d, i){ return (i * 26)+16;})
             .text(function(d){
                 var catLabel = d;
                 return [catLabel];
@@ -341,7 +376,7 @@ function Visify(allData, whatChart) {
             {'Label':'CBO Debt'},
             {'Label':'Overview'}];
 
-
+    // Set up functions for the buttons to run
     function inputChange (d) {
         var inputValue = d.Label;
 
@@ -358,8 +393,8 @@ function Visify(allData, whatChart) {
             {changeChart(d, inputValue);};
     }
 
+    // inputChange() calls changeChart()
     function changeChart (d, inputValue) {
-        //console.log(d, inputValue)
         function removeStuff() {
             svg.transition()
                 .remove();};
@@ -373,7 +408,7 @@ function Visify(allData, whatChart) {
                 .text(d => d.Label)
                 .attr('class', 'button-text')
                 .style('text-anchor', 'left')
-                .attr('x', width*.80)
+                .attr('x', plotWidth)
                 .attr('y', function(d, i){ return ((height*.20)+i * 40);})
                 .attr('fill', 'black')
                 .style('opacity', 1)
