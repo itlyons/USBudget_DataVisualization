@@ -96,8 +96,6 @@ function Visify(allData, whatChart = 'Overview') {
             'Individual Income Taxes',	'Corporate Income Taxes', 'Payroll Taxes',
             'Other Sources']
 
-                //    , 'Social Security', 'Federal Healthcare Spending',
-                //    'Other Noninterest Spending', 'Net Interest']
     const color = d3.scaleOrdinal()
                     .domain(cats)
                     .range(d3.schemeDark2);
@@ -199,6 +197,19 @@ function Visify(allData, whatChart = 'Overview') {
         ;}
 
         if (whatChart === 'CBO Spending') {
+            annos.append('text')
+                .attr('id', 'annoSpecial')
+                .attr('x', todayX+10)
+                .attr('y', plotHeight*0.90)
+                .attr('text-anchor', 'left')
+                .text('Higher Interest Rates And Higher Deficits');
+
+            annos.append('text')
+                .attr('id', 'annoSpecial')
+                .attr('x', todayX+10)
+                .attr('y', plotHeight*0.92)
+                .attr('text-anchor', 'left')
+                .text('Projected To Nearly Double Interest Payments');
         ;}
 
         if (whatChart === 'Overview') {
@@ -210,12 +221,12 @@ function Visify(allData, whatChart = 'Overview') {
                 .text('CBO Projects Spending to Outpace Revenues');
 
             annos.append('text')
-                .attr('transform', 'rotate(-25)')
+                .attr('transform', 'rotate(-30)')
                 .attr('id', 'annoSpecial')
                 .attr('x', plotWidth*.6)
-                .attr('y', plotHeight*.65)
+                .attr('y', plotHeight*.72)
                 .attr('text-anchor', 'left')
-                .text('Deficits Lead to Debt');
+                .text('Higher Deficits, Higher Debt');
         ;};
     }
 
@@ -424,7 +435,6 @@ function Visify(allData, whatChart = 'Overview') {
 
         Visify(allData, inputValue);
     }
-
 
     buttons.selectAll('text')
             .data(selectors).enter()
