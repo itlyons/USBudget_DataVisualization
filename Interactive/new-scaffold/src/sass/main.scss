@@ -76,8 +76,16 @@ path.line {
 .button-text {
     font-family: "Verdana";
     font-size:14px;
-    fill: purple;
+    fill: black;
+}
 
+.button-text:hover {
+    font-family: "Verdana";
+    font-size:14px;
+    text-decoration: underline;
+    background-color: yellow;
+    fill: purple;
+    font-weight: bold;
 }
 
 .hover-line {
