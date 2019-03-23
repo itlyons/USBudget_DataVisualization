@@ -34,11 +34,7 @@ body {
     font-size:14px;
 }
 
-/*
-path.line:hover {
-   stroke-width: 3.0px;
- }
-*/
+
 path.line {
    fill: none;
    stroke: #666;
@@ -73,13 +69,15 @@ path.line {
 .tooltip text {
     font-family: "Verdana";
     font-size:12px;
-    fill: purple;
+    fill: black;
+    background: '#BCC5F7';
 }
 
 .button-text {
     font-family: "Verdana";
     font-size:14px;
     fill: purple;
+
 }
 
 .hover-line {

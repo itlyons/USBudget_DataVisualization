@@ -12,31 +12,33 @@ var annotate = require('d3-svg-annotation');
 var d3 = require('d3');
 
 domReady(() => {
-    Promise.all(['data/cboSpend.json', 'data/TypesOfSpend.json']
+    Promise.all(['data/cboSpend.json', 'data/TypesOfSpend.json',
+        'data/TypesOfRev.json']
     .map(url => fetch(url).then(allData => allData.json())))
     .then(allData => Visify(allData));
     });
 
 
-function Visify(allData, whatChart) {
-    var [overviewData, spendData] = allData;
+function Visify(allData, whatChart = 'Overview') {
+    var [overviewData, spendData, revData] = allData;
 
     // Create a function that returns the data we want
     // whatChart is set when the user clicks one of the button options
-    var chooseData = function indexizer(overviewData, spendData, whatChart) {
-        if (whatChart === 'Overview')
-            {var lineData = [(overviewData.filter(d => d.Category==='Publicly Held Debt')),
-                            (overviewData.filter(d => d.Category==='Total Spending')),
-                            (overviewData.filter(d => d.Category==='Total Revenues'))
-                                ];
-            return [overviewData, lineData]}
-
+    var chooseData = function indexizer(overviewData, spendData, revData, whatChart) {
         if (whatChart === 'CBO Spending')
             {var lineData = [(spendData.filter(d => d.Category==='Discretionary')),
                             (spendData.filter(d => d.Category==='Mandatory')),
                             (spendData.filter(d => d.Category==='Net Interest'))
                             ];
             return [spendData, lineData]}
+
+        if (whatChart === 'CBO Revenues')
+            {var lineData = [(revData.filter(d => d.Category==='Individual Income Taxes')),
+                            (revData.filter(d => d.Category==='Corporate Income Taxes')),
+                            (revData.filter(d => d.Category==='Payroll Taxes')),
+                            (revData.filter(d => d.Category==='Other Sources'))
+                            ];
+            return [revData, lineData]}
 
         else {
             var lineData = [(overviewData.filter(d => d.Category==='Publicly Held Debt')),
@@ -48,7 +50,7 @@ function Visify(allData, whatChart) {
 
     // I created the original graph with the data subset
     // That's why I set up the viz & plot the viz with differently formatted arrays
-    var [data, lineData] = chooseData(overviewData, spendData, whatChart)
+    var [data, lineData] = chooseData(overviewData, spendData, revData, whatChart)
 
     // Grab the UNIQUE categories from this particular chart
     var uniqCats = d3.set(data, function(d) {return d.Category});
@@ -58,12 +60,12 @@ function Visify(allData, whatChart) {
     //******************** SVG & SCALE SETUP ********************//
     //********************                   ********************//
     const width = 1200;
-    const height = 1.5/3 * width;
+    const height = 2/3 * width;
 
     const margin = {left: 60,
                 right: 120,
-                top: 40,
-                bottom: 20
+                top: 50,
+                bottom: 50
                 };
 
     const plotWidth = width - margin.left - margin.right;
@@ -72,6 +74,7 @@ function Visify(allData, whatChart) {
     const svg = select('.vis-container')
                     .attr('width', width)
                     .attr('height', height)
+                    .style('background', '#f4f4f4')
                     .append('g')
                     .attr('class', whatChart)
                     .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -89,7 +92,9 @@ function Visify(allData, whatChart) {
 
     // Meow. List all categories so that colors don't repeat.
     var cats = ['Publicly Held Debt','Total Spending', 'Total Revenues',
-                'Discretionary', 'Mandatory', 'Net Interest']
+                'Discretionary', 'Mandatory', 'Net Interest',
+            'Individual Income Taxes',	'Corporate Income Taxes', 'Payroll Taxes',
+            'Other Sources']
 
                 //    , 'Social Security', 'Federal Healthcare Spending',
                 //    'Other Noninterest Spending', 'Net Interest']
@@ -166,10 +171,10 @@ function Visify(allData, whatChart) {
             })
          .on('mouseout', function() {
                             tooltipText.transition()
-                                .delay(1500)
+                                .delay(2000)
                                 .style('opacity', 0);
                             tooltip.transition()
-                                .delay(1500)
+                                .delay(2000)
                                 .style('opacity', 0);
             });
 
@@ -189,11 +194,15 @@ function Visify(allData, whatChart) {
 
     var annos = svg.append('g').attr('class', 'random-text');
 
-    function writeText(annos) {
+    function writeText(whatChart, annos) {
+        if (whatChart === 'CBO Revenues') {
+
+        ;}
+
         if (whatChart === 'CBO Spending') {
         ;}
 
-        else {
+        if (whatChart === 'Overview') {
             console.log(annos)
             annos.append('text')
                 .attr('id', 'annoSpecial')
@@ -206,13 +215,13 @@ function Visify(allData, whatChart) {
                 .attr('transform', 'rotate(-25)')
                 .attr('id', 'annoSpecial')
                 .attr('x', plotWidth*.6)
-                .attr('y', plotHeight*.9)
+                .attr('y', plotHeight*.65)
                 .attr('text-anchor', 'left')
                 .text('Deficits Lead to Debt');
         ;};
     }
 
-    writeText(annos)
+    writeText(whatChart, annos)
     // Add labels for 2019 marker //
     annos.append('text')
             .attr('class', 'annotation')
@@ -235,7 +244,7 @@ function Visify(allData, whatChart) {
         .attr('y', 0)
         .attr('height', plotHeight)
         .attr('width', plotWidth)
-        .style('fill', '#ffffff');
+        .style('fill', '#f4f4f4');
 
     svg.select('rect.curtain')
         .transition()
@@ -246,7 +255,7 @@ function Visify(allData, whatChart) {
     // Add chart title
     annos.append('text')
         .attr('class', 'chart-title')
-        .attr('x', (width / 2))
+        .attr('x', (plotWidth / 2))
         .attr('y', 0 - (margin.top / 2))
         .attr('text-anchor', 'middle')
         .style('font-size', '24px')
@@ -324,6 +333,8 @@ function Visify(allData, whatChart) {
               .attr('transform','translate(50,50)')
               .style('font-size','12px');
 
+    legend.append('rect')
+
     // Add the legend's colored boxes.
     legend.selectAll('rect')
         .data(uniqCats)
@@ -368,8 +379,15 @@ function Visify(allData, whatChart) {
 //****************** <BUTTON TIME> ******************
 //****************************************************
     var buttons = svg.append('g')
-//                    .attr('transform','translate('+ plotWidth*.8 + ',50)')
                     .attr('id', 'button-time');
+
+    buttons.append('rect')
+            .attr('transform', 'translate(' + (plotWidth+1) + ',' + (height*.13) + ')')
+            .attr('width', margin.right*.99)
+            .attr('height', plotHeight*.3)
+            .attr('fill', 'none')
+            .style('stroke-width', 1)
+            .style('stroke', 'black');
 
     var selectors = [{'Label':'CBO Spending'},
             {'Label':'CBO Revenues'},
@@ -396,11 +414,14 @@ function Visify(allData, whatChart) {
     // inputChange() calls changeChart()
     function changeChart (d, inputValue) {
         function removeStuff() {
+            // This isn't how I wanted to do this, but
             svg.transition()
                 .remove();};
         removeStuff();
+        console.log('switching...', d, inputValue)
         Visify(allData, inputValue);
     }
+
 
     buttons.selectAll('text')
             .data(selectors).enter()
@@ -408,11 +429,19 @@ function Visify(allData, whatChart) {
                 .text(d => d.Label)
                 .attr('class', 'button-text')
                 .style('text-anchor', 'left')
-                .attr('x', plotWidth)
+                .attr('x', plotWidth*1.01)
                 .attr('y', function(d, i){ return ((height*.20)+i * 40);})
                 .attr('fill', 'black')
                 .style('opacity', 1)
                 .on('click', inputChange);
+
+    buttons.append('text')
+        .attr('class', 'button-text')
+        .attr('x', plotWidth*1.02)
+        .attr('y', height*.160)
+        .style('font-weight', 'bold')
+        .style('fill', 'black')
+        .text('Show Me:')
 
     console.log(uniqCats)
 }
