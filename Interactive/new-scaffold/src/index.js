@@ -196,14 +196,12 @@ function Visify(allData, whatChart = 'Overview') {
 
     function writeText(whatChart, annos) {
         if (whatChart === 'CBO Revenues') {
-
         ;}
 
         if (whatChart === 'CBO Spending') {
         ;}
 
         if (whatChart === 'Overview') {
-            console.log(annos)
             annos.append('text')
                 .attr('id', 'annoSpecial')
                 .attr('x', plotWidth*.65)
@@ -252,6 +250,14 @@ function Visify(allData, whatChart = 'Overview') {
         .ease(d3.easeLinear)
         .attr('x', plotWidth*2);
 
+
+    const title = {
+        'Overview':'Revenues Stagnate, and Debt Grows',
+        'CBO Revenues':'Revenues Are Projected to Stagnate, Except Personal Income Taxes',
+        'CBO Spending':'Mandatory Spending Squeezes Discretionary Spending'
+
+    }
+
     // Add chart title
     annos.append('text')
         .attr('class', 'chart-title')
@@ -260,7 +266,7 @@ function Visify(allData, whatChart = 'Overview') {
         .attr('text-anchor', 'middle')
         .style('font-size', '24px')
         .style('text-decoration', 'bold')
-        .text('Revenues Stagnate, and Debt Grows');
+        .text(title[whatChart]);
 
 
 
@@ -333,8 +339,6 @@ function Visify(allData, whatChart = 'Overview') {
               .attr('transform','translate(50,50)')
               .style('font-size','12px');
 
-    legend.append('rect')
-
     // Add the legend's colored boxes.
     legend.selectAll('rect')
         .data(uniqCats)
@@ -391,7 +395,6 @@ function Visify(allData, whatChart = 'Overview') {
 
     var selectors = [{'Label':'CBO Spending'},
             {'Label':'CBO Revenues'},
-            {'Label':'CBO Debt'},
             {'Label':'Overview'}];
 
     // Set up functions for the buttons to run
@@ -418,7 +421,7 @@ function Visify(allData, whatChart = 'Overview') {
             svg.transition()
                 .remove();};
         removeStuff();
-        console.log('switching...', d, inputValue)
+
         Visify(allData, inputValue);
     }
 
@@ -443,5 +446,4 @@ function Visify(allData, whatChart = 'Overview') {
         .style('fill', 'black')
         .text('Show Me:')
 
-    console.log(uniqCats)
 }
