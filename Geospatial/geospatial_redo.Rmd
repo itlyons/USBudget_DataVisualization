@@ -1,0 +1,176 @@
+---
+title: "Geospatial[Redo]"
+author: "Ian Lyons"
+date: "4/14/2019"
+output: 
+  html_document: 
+    code_folding: hide
+    fig_caption: yes
+    fig_height: 10
+    fig_width: 12
+    toc_depth: 1
+    toc_float:
+      collapsed: false
+    theme: cosmo
+    toc: yes
+urlcolor: blue
+---
+
+```{r setup, echo=FALSE, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+library(tidyverse)
+library(rmarkdown)
+library(here)
+library(gghighlight)
+library(ggpubr)
+library(ggrepel)
+library(formatR)
+library(tinytex)
+library(scales)
+library(ggthemes)
+library(extrafont)
+library(RColorBrewer)
+library(treemapify)
+library(ggplot2)
+
+library(fiftystater)
+library(sf)
+library(tools)
+library(maps)
+library(rnaturalearth)
+library(rnaturalearthdata)
+```
+
+```{r Read in Data & Reshape, message=FALSE, warning=FALSE}
+### Define Theme
+custom_pal <- c("#3FC1C9", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D", "#CC7776", "#FFF07A")
+
+iltheme <- theme(plot.title = element_text(color="black", 
+                                           size=20, 
+                                           family="Verdana", 
+                                           hjust=0),
+                text = element_text(family="Courier New", size=14),
+                plot.subtitle = element_text(color="#4c4e4d", 
+                                             size=16, 
+                                             hjust=0, 
+                                             family = "Verdana"),
+                axis.title.x = element_text(color="black", size=20, family="Verdana"),
+                axis.title.y = element_text(color="black", size=20, family="Verdana"), 
+                plot.caption = element_text(color="black", size=14, face="italic"),
+                axis.text.x = element_text(size=14),
+                axis.text.y = element_text(size=14),
+                plot.background=element_rect(fill="#F0F0F0"),
+                panel.background =element_rect(fill="#F0F0F0"),
+                panel.grid.minor.y = element_blank(),
+                axis.ticks = element_blank(),
+                axis.line = element_line(size=1, color = "Black"),
+                legend.text = element_text(size=16))
+```
+
+
+# Federal Aid to State & Local Governments
+
+In Fiscal Year 2018, the federal government was projected to grant about $728 billion to state and local governments. According to the Congressional Research Service, federal grants make up one-third of state spending, and more than half of state spending on health care and other public assistance programs. Since the expansion of Medicaid included in the Affordable Care Act (ACA), the amount of federal grant money flowing to health care has only increased.
+
+```{r Load in the map of the US, warning=FALSE}
+raw_aid <- read_csv("../Raw Data/state aid - Sheet1.csv")
+library("ggplot2")
+theme_set(theme_bw())
+library("sf")
+
+library("rnaturalearth")
+library("rnaturalearthdata")
+
+world <- ne_countries(scale='medium',returnclass = 'sf')
+usa <- subset(world, admin == "United States of America")
+
+
+alaska <- ggplot(data = usa) +
+     geom_sf() +
+     coord_sf(crs = st_crs(3467), xlim = c(-2400000, 1600000), ylim = c(200000, 
+         2500000), expand = FALSE, datum = NA)
+
+hawaii  <- ggplot(data = usa) +
+     geom_sf() +
+     coord_sf(crs = st_crs(4135), xlim = c(-161, -154), ylim = c(18, 
+         23), expand = FALSE, datum = NA)
+
+states <- st_as_sf(map("state", plot = FALSE, fill = TRUE))
+states <- cbind(states, st_coordinates(st_centroid(states)))
+states$ID <- toTitleCase(states$ID)
+
+
+# Join aid data to states df
+joined <- left_join(states, raw_aid, by=c("ID" = "NAME"))
+breaks <- quantile(x = joined$`2018 grant per capita`,seq(0,1,.20))
+bins <- cut(joined$`2018 grant per capita`, unique(breaks), include.lowest=TRUE)
+joined$bin <- bins
+bin_labels <- c("$1,120—$1,450", "$1,451—$1,660", "$1,661—$2,020", "$2,021—$2,460", "$2,461—$3,007")
+joined <- filter(joined, STUSPS != 'DC')
+
+(mainland <- ggplot(data = usa) +
+     geom_sf() +
+    geom_sf(data = joined, aes(fill = `2018 grant per capita`)) + 
+     coord_sf(crs = st_crs(2163), xlim = c(-2500000, 2500000), ylim = c(-2300000, 
+         730000))) +
+  scale_fill_distiller(palette = "PuBu", direction = 1, labels = bin_labels, name="Per Capita Federal Grant") +
+   annotation_custom(
+      grob = ggplotGrob(alaska),
+      xmin = -2750000,
+      xmax = -2750000 + (1600000 - (-2400000))/2.5,
+      ymin = -2450000,
+      ymax = -2450000 + (2500000 - 200000)/2.5
+  ) +
+  annotation_custom(
+      grob = ggplotGrob(hawaii),
+      xmin = -1250000,
+      xmax = -1250000 + (-154 - (-161))*120000,
+      ymin = -2450000,
+      ymax = -2450000 + (23 - 18)*120000
+  ) +   labs(title = "Federal Grant Dollars Flow to Health Care Programs")
+
+```
+
+```{r fig.height=8, fig.width=10}
+expanded <- c("AK", "HI", "NM", "AZ", "CA", "CO", "NV", "OR", "WA", "MT", "ND", "MN", "AR", "LA", "IA", "MI", "IL", "IN", "OH", "KY", "WV", "DC", "MD", "DE", "CT", "NJ", "PA", "CT", "RI", "MA", "NH", "VT", "NY")
+joined <- joined %>% mutate('Expanded' = case_when((STUSPS %in% expanded) ~ 'Expanded Medicaid', (!STUSPS %in% expanded) ~ 'Did Not Expand Medicaid'))
+
+column_pc <- ggplot(data = joined, 
+                    aes(x = reorder(STUSPS, `2018 grant per capita`), 
+                        y = `2018 grant per capita`)) + 
+  geom_col(data = joined, 
+           aes(fill = Expanded, 
+               label = STUSPS),
+           color="black", 
+           size=0.25) +
+  iltheme +  
+  scale_y_continuous(name="Grant Amount ($US) Per Person", 
+                     labels = scales::dollar_format(),
+                     expand = c(0,0)) +
+  scale_x_discrete(name= element_blank(), 
+                   expand = expand_scale()) +
+  scale_fill_brewer(palette = "PuBu", name="Expanded Medicaid?") +
+  theme(plot.title = element_text(size=24),
+        panel.grid = element_blank(), 
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(colour = "#AFAFAF"),
+        axis.text.x = element_text(size=12, 
+                                   hjust = 1),
+        axis.text.y = element_text(size=12),
+        legend.background = element_rect(size = .25,  
+                                         linetype="solid", 
+                                         colour ="black"),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 18, 
+                                    face = "bold"),
+        panel.background = element_rect(fill = NA, 
+                                        size = .2),
+        legend.position = c(.8, .2),
+        axis.line = element_line(size = .25)) + 
+  labs(title = "Federal Grant Money Supports Health Care Spending") + 
+  coord_flip()
+column_pc
+```
+
+
+
