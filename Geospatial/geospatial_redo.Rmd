@@ -129,7 +129,7 @@ main <- (ggplot(data = usa) +
       ymin = -2450000,
       ymax = -2450000 + (23 - 18)*120000
   ) + 
-  theme(legend.position = c(.1, .8), 
+  theme(legend.position = c(.09, .8), 
                 text = element_text(family = 'Courier New'),
         legend.background = element_blank(),
         plot.title = element_text(size = 22, family = 'Verdana'),
