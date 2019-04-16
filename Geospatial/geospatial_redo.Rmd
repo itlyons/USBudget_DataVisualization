@@ -2,17 +2,20 @@
 title: "Geospatial[Redo]"
 author: "Ian Lyons"
 date: "4/14/2019"
-output: 
-  html_document: 
+output:
+  html_document:
     code_folding: hide
     fig_caption: yes
     fig_height: 10
     fig_width: 12
-    toc_depth: 1
-    toc_float:
-      collapsed: false
     theme: cosmo
     toc: yes
+    toc_depth: 1
+    toc_float:
+      collapsed: no
+  pdf_document:
+    toc: yes
+    toc_depth: '1'
 urlcolor: blue
 ---
 
@@ -45,11 +48,11 @@ library(rnaturalearthdata)
 ### Define Theme
 custom_pal <- c("#3FC1C9", "#B9F3FF", "#8A4DCC", "#4DCC74", "#EEB9FF", "#CC534D", "#CC7776", "#FFF07A")
 
-iltheme <- theme(plot.title = element_text(color="black", 
+iltheme <- theme(text = element_text(family="Courier New", size=14),
+                 plot.title = element_text(color="black", 
                                            size=20, 
                                            family="Verdana", 
                                            hjust=0),
-                text = element_text(family="Courier New", size=14),
                 plot.subtitle = element_text(color="#4c4e4d", 
                                              size=16, 
                                              hjust=0, 
@@ -72,18 +75,13 @@ iltheme <- theme(plot.title = element_text(color="black",
 
 In Fiscal Year 2018, the federal government was projected to grant about $728 billion to state and local governments. According to the Congressional Research Service, federal grants make up one-third of state spending, and more than half of state spending on health care and other public assistance programs. Since the expansion of Medicaid included in the Affordable Care Act (ACA), the amount of federal grant money flowing to health care has only increased.
 
-```{r Load in the map of the US, warning=FALSE, fig.height=8, fig.width=9}
+```{r Load in the map of the US, warning=FALSE, fig.height=8, fig.width=8}
+# For the first map + column chart (coded in this chunk)
 raw_aid <- read_csv("../Raw Data/state aid - Sheet1.csv")
-library("ggplot2")
 theme_set(theme_bw())
-library("sf")
-
-library("rnaturalearth")
-library("rnaturalearthdata")
 
 world <- ne_countries(scale='medium',returnclass = 'sf')
 usa <- subset(world, admin == "United States of America")
-
 
 alaska <- ggplot(data = usa) +
      geom_sf(fill = '#cfd0e7') +
@@ -104,7 +102,7 @@ joined <- right_join(states, raw_aid, by=c("ID" = "NAME"))
 breaks <- quantile(x = joined$`2018 grant per capita`,seq(0,1,.250))
 bins <- cut(joined$`2018 grant per capita`, unique(breaks), include.lowest=TRUE)
 joined$bin <- bins
-bin_labels <- c("$1,450", "$1,660", "$2,020", "$2,460")
+#bin_labels <- c("$1,450", "$1,660", "$2,020", "$2,460")
 joined <- filter(joined, STUSPS != 'DC')
 
 main <- (ggplot(data = usa) +
@@ -112,7 +110,11 @@ main <- (ggplot(data = usa) +
     geom_sf(data = joined, aes(fill = `2018 grant per capita`)) + 
      coord_sf(crs = st_crs(2163), xlim = c(-2500000, 2500000), ylim = c(-2300000, 
          730000))) +
-  scale_fill_distiller(palette = "PuBu", direction = 1, labels = bin_labels, name="Per Capita\nFederal Grant") +
+  scale_fill_distiller(palette = "PuBu", 
+                       direction = 1, 
+                       labels = scales::dollar_format(), 
+                       name="Per Capita\nFederal Grant",
+                       limits = c(1000, 4000)) +
    annotation_custom(
       grob = ggplotGrob(alaska),
       xmin = -2750000,
@@ -126,15 +128,17 @@ main <- (ggplot(data = usa) +
       xmax = -1250000 + (-154 - (-161))*120000,
       ymin = -2450000,
       ymax = -2450000 + (23 - 18)*120000
-  ) +   
-  theme(legend.position = c(.08, .8), 
+  ) + 
+  theme(legend.position = c(.1, .8), 
+                text = element_text(family = 'Courier New'),
         legend.background = element_blank(),
-        plot.title = element_text(size = 22)) +
-  labs(title = "Federal Grant Dollars Flow to Health Care Programs")
+        plot.title = element_text(size = 22, family = 'Verdana'),
+        plot.caption = element_text(color="black", size=14, face="italic")) +
+  labs(title = "Federal Grant Dollars Per Citizen Vary by State",
+       caption = "Source: Office of Management and Budget")
 
 main
 ```
-
 ```{r fig.height=8, fig.width=9}
 expanded <- c("AK", "HI", "NM", "AZ", "CA", "CO", "NV", "OR", "WA", "MT", "ND", "MN", "AR", "LA", "IA", "MI", "IL", "IN", "OH", "KY", "WV", "DC", "MD", "DE", "CT", "NJ", "PA", "CT", "RI", "MA", "NH", "VT", "NY")
 joined <- joined %>% mutate('Expanded' = case_when((STUSPS %in% expanded) ~ 'Expanded Medicaid', (!STUSPS %in% expanded) ~ 'Did Not Expand Medicaid'))
@@ -144,16 +148,17 @@ column_pc <- ggplot(data = joined,
                         y = `2018 grant per capita`)) + 
   geom_col(data = joined, 
            aes(fill = Expanded, 
-               label = STUSPS),
+               labels = STUSPS),
            color="black", 
            size=0.25) +
   iltheme +  
   scale_y_continuous(name="Grant Amount ($US) Per Person", 
                      labels = scales::dollar_format(),
+                     limits = c(0, 4000),
                      expand = c(0,0)) +
   scale_x_discrete(name= element_blank(), 
                    expand = expand_scale()) +
-  scale_fill_brewer(palette = "Blues", name="Expanded Medicaid?") +
+  scale_fill_brewer(palette = "Blues", name="Expanded Medicaid?\n(as of Jan. 1, 2017)") +
   theme(plot.title = element_text(size=22),
         panel.grid = element_blank(), 
         panel.grid.major.y = element_blank(),
@@ -161,6 +166,7 @@ column_pc <- ggplot(data = joined,
         axis.text.x = element_text(size=12, 
                                    hjust = 1),
         axis.text.y = element_text(size=12),
+        text = element_text(family = 'Courier New'),
         legend.background = element_rect(size = .25,  
                                          linetype="solid", 
                                          colour ="black"),
@@ -170,12 +176,81 @@ column_pc <- ggplot(data = joined,
         panel.background = element_rect(fill = NA, 
                                         size = .2),
         legend.position = c(.75, .2),
-        axis.line = element_line(size = .25)) + 
-  labs(title = "Federal Grants Support Medicaid Expansion") +
+        axis.line = element_line(size = .25),
+        plot.caption = element_text(color="black", size=14, face="italic")) + 
+  labs(title = "Federal Grants Support the ACA's Medicaid Expansion",
+       caption = "Source for Medicaid expansion data:\nKaiser Family Foundation") +
   coord_flip()
 column_pc 
 
 ```
 
 
+
+
+
+
+
+# Health Care is a large share of most state budgets  
+The federal government plays a crucial role in supporting state budgets. The Medicaid program, which unlike Medicare is partially paid for by states, accounts for a large share of state spending. Depending on how large a state's overall budget is, how generous their Medicaid program is, and whether or not they expanded Medicaid, the health care program accounts for 14% to 39% of state spending. A large portion of Medicaid is paid for by the federal government.
+```{r Health Care as pct of state budget}
+library(geojsonio)
+spdf <- geojsonio::geojson_read("../Raw Data/us_states_hexgrid.geojson",  what = "sp") 
+library(broom)
+library(cartogram)
+library(rgeos)
+library(mapproj)
+# Read in Medicaid as share of state budget data 
+healthcare <- read_csv("../Raw Data/HealthCareAsShare.csv")
+
+spdf@data = spdf@data %>% mutate(google_name = gsub(" \\(United States\\)", "", google_name))
+spdf@data = spdf@data %>% 
+  left_join(., 
+            healthcare, 
+            by=c("google_name"="State"))
+
+spdf_fortified <- broom::tidy(spdf, region = "google_name")
+spdf_fortified <- spdf_fortified %>% left_join(. , healthcare, by=c("id"="State")) 
+centers <- cbind.data.frame(data.frame(gCentroid(spdf, byid=TRUE), id=spdf@data$iso3166_2))
+
+cartoCustom <- theme(text = element_text(family="Courier New", size=14),
+                     plot.title = element_text(color="black", 
+                                               size=22, 
+                                               family="Verdana", 
+                                               hjust=0),
+                     plot.caption = element_text(color="black", size=14, face="italic"),
+                     legend.title = element_text(size = 16),
+                     legend.text = element_text(size=14),
+                     plot.subtitle = element_text(size = 16, family = "Courier New"),
+                     legend.position = 'bottom' 
+                     )
+                     
+ggplot() +
+  geom_polygon(data = spdf_fortified, aes(fill = `Medicaid Share`, x = long, y = lat, group = group), color="white") +
+  geom_text(data=centers, aes(x=x, y=y, label=id)) +
+  scale_fill_gradient(name = 'Medicaid As Percent of State Spending, 2018', 
+                       labels = scales::percent_format(accuracy = 1), 
+                       low = '#e0ecf4', limits = c(0.141 , 0.4),
+                       high = '#8856a7',
+                      guide=guide_legend( keyheight = unit(3, units = "mm"), 
+                                          keywidth=unit(15, units = "mm"), 
+                                          title.position = 'top',direction = 'horizontal', nrow = 1,
+                                          label.position = "top")) +
+  annotate(geom = "text", 
+           hjust=0,
+           vjust=0,
+           x = -82, 
+           y = 32, 
+           label = "Data for District of \nColumbia is not included.", 
+           size = 4,
+           fontface='italic',
+           family = 'Courier New') +
+  theme_void() + 
+  cartoCustom +
+  labs(title = "Medicaid Makes Up A Large But Varying Portion of State Budgets", 
+       subtitle = "Figures represent 2018 data compiled by NASBO.\nDarker purple indicates a larger share of the state's budget is consumed by Medicaid.",
+       caption = "Source: National Association of State Budget Officers (NASBO)\nNASBO 2018 State Expenditure Report") +
+  coord_map()
+ 
+```
 
