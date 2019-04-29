@@ -7,11 +7,19 @@ body {
   align-items: center;
   display: flex;
   flex-direction: column;
+  background-color: #e4e3e382
 }
+
+
 .legendtext {
     font-family: "Verdana";
     font-size: 14px;
     text-align: center;
+}
+
+#legendID {
+
+    fill: none;
 }
 .axis {
   font-family: "Verdana";
@@ -127,6 +135,10 @@ path.line {
 }
 
 #buttonContainer {
-display:inline-block;
-text-align: center;
+    display:inline-block;
+    text-align: center;
+}
+
+#buttonContainer h4{
+        text-align:left;
 }

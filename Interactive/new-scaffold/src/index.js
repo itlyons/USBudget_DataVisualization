@@ -355,15 +355,13 @@ function Visify(allData, whatChart = 'Overview') {
 
 //****************** <LEGEND TIME> ******************
 //***************************************************
-    var legend = svg.append('g')
-              .attr('class','legend')
+    var legend = svg.append('g').attr('id', 'legendID')
+                    .append('rect')
               .attr('transform','translate(50,50)')
               .style('font-size','12px')
+              .style('class', 'legendCanvas')
                 .attr('width', margin.right*.99)
-                .attr('height', plotHeight*.3)
-                .attr('fill', 'none')
-                .style('stroke-width', 1)
-                .style('stroke', 'black');
+                .attr('height', plotHeight*.3);
 
     // Add the legend's colored boxes.
     legend.selectAll('rect')
