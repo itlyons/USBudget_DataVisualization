@@ -12,9 +12,11 @@ var annotate = require('d3-svg-annotation');
 var d3 = require('d3');
 
 domReady(() => {
-    Promise.all(['data/cboSpend.json', 'data/TypesOfSpend.json',
-        'data/TypesOfRev.json']
-    .map(url => fetch(url).then(allData => allData.json())))
+    Promise.all(['data/cboSpend.json',
+    'data/TypesOfSpend.json',
+    'data/TypesOfRev.json']
+    .map(url => fetch(url)
+    .then(allData => allData.json())))
     .then(allData => Visify(allData));
     });
 
@@ -48,7 +50,7 @@ function Visify(allData, whatChart = 'Overview') {
             return [overviewData, lineData]};
         }
 
-    // I created the original graph with the data subset
+    // I created the original graph with a data subset
     // That's why I set up the viz & plot the viz with differently formatted arrays
     var [data, lineData] = chooseData(overviewData, spendData, revData, whatChart)
 
@@ -62,15 +64,20 @@ function Visify(allData, whatChart = 'Overview') {
     const width = 1200;
     const height = 2/3 * width;
 
-    const margin = {left: 60,
+    const margin = {left: 75,
                 right: 120,
                 top: 50,
-                bottom: 50
+                bottom: 75
                 };
 
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.bottom - margin.top;
-
+    /*
+    const background = d3.select('background-curtain').style("height", "100%")
+                            .append('div')
+                            .attr('class', 'background')
+                            .append('.vis-container');
+                            */
     const svg = select('.vis-container')
                     .attr('width', width)
                     .attr('height', height)
@@ -124,6 +131,7 @@ function Visify(allData, whatChart = 'Overview') {
         .attr('class', 'axis')
         .attr('transform', 'translate(0,0)')
         .call(xFormat);
+
     //********************                      ********************//
     //******************** </SVG & SCALE SETUP> ********************//
 
@@ -230,11 +238,12 @@ function Visify(allData, whatChart = 'Overview') {
         ;};
     }
 
+
     writeText(whatChart, annos)
     // Add labels for 2019 marker //
     annos.append('text')
             .attr('class', 'annotation')
-            .attr('x', todayX+25)
+            .attr('x', todayX+10)
             .attr('y', plotHeight*0.35)
             .attr('text-anchor', 'right')
             .text('CBO Projection -->');
@@ -334,6 +343,7 @@ function Visify(allData, whatChart = 'Overview') {
           .attr('r', 5.0);
 
       var tooltipText = tooltip.append('text')
+            .attr('class', 'tooltip')
             .attr('x', 15)
             .attr('dy', '.31em')
             .style('opacity', 0);
@@ -348,22 +358,27 @@ function Visify(allData, whatChart = 'Overview') {
     var legend = svg.append('g')
               .attr('class','legend')
               .attr('transform','translate(50,50)')
-              .style('font-size','12px');
+              .style('font-size','12px')
+                .attr('width', margin.right*.99)
+                .attr('height', plotHeight*.3)
+                .attr('fill', 'none')
+                .style('stroke-width', 1)
+                .style('stroke', 'black');
 
     // Add the legend's colored boxes.
     legend.selectAll('rect')
-        .data(uniqCats)
-        .enter()
-        .append('rect')
-          .attr('class', 'legendBox')
-          .attr('x', plotWidth *.01)
-          .attr('y', function(d, i){ return i *  26;})
-          .attr('width', 24)
-          .attr('height', 24)
-          .style('fill', function(d) {
-             var boxColor = color(d);
-             return boxColor;
-         });
+                .data(uniqCats)
+                .enter()
+                .append('rect')
+                  .attr('class', 'legendBox')
+                  .attr('x', plotWidth *.01)
+                  .attr('y', function(d, i){ return i *  30;})
+                  .attr('width', 24)
+                  .attr('height', 24)
+                  .style('fill', function(d) {
+                     var boxColor = color(d);
+                     return boxColor;
+                 });
 
     // Add the labels to the legend positioned next to the boxes.
     legend.selectAll('text')
@@ -372,8 +387,8 @@ function Visify(allData, whatChart = 'Overview') {
         .append('text')
             .attr('class', 'legendtext')
             .style('text-anchor', 'left')
-            .attr('x', 25+ plotWidth*.01)
-            .attr('y', function(d, i){ return (i * 26)+16;})
+            .attr('x', 30+ plotWidth*.01)
+            .attr('y', function(d, i){ return (i * 30)+16;})
             .text(function(d){
                 var catLabel = d;
                 return [catLabel];
@@ -400,7 +415,7 @@ function Visify(allData, whatChart = 'Overview') {
             .attr('transform', 'translate(' + (plotWidth+1) + ',' + (height*.13) + ')')
             .attr('width', margin.right*.99)
             .attr('height', plotHeight*.3)
-            .attr('fill', 'none')
+            .attr('fill', 'gold')
             .style('stroke-width', 1)
             .style('stroke', 'black');
 
@@ -454,6 +469,7 @@ function Visify(allData, whatChart = 'Overview') {
         .attr('y', height*.160)
         .style('font-weight', 'bold')
         .style('fill', 'black')
-        .text('Show Me:')
+        .text('Show Me:');
 
+        d3.select('#button').on('click', inputChange)
 }
