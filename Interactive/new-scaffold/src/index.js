@@ -377,7 +377,7 @@ function Visify(allData, whatChart = '') {
                 .append('rect')
                   .attr('class', 'legendBox')
                   .attr('x', plotWidth *.01)
-                  .attr('y', function(d, i){ console.log(d,i);return i *  35;})
+                  .attr('y', function(d, i){ return i *  35;})
                   .attr('width', 30)
                   .attr('height', 30)
                   .style('fill', function(d) {
@@ -428,7 +428,6 @@ function Visify(allData, whatChart = '') {
 
     // Set up functions for the buttons to run
     var inputChange = function(inputValue) {
-        //console.log(inputValue)
 
         if (inputValue === 'Spending Projections')
             {changeChart(inputValue);}
@@ -454,9 +453,7 @@ function Visify(allData, whatChart = '') {
 
     var overviewButton = d3.selectAll('button');
     overviewButton.on('click', function(d,i){
-
         inputChange(this.value);
-
     });
 
 
