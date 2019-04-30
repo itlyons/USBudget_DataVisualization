@@ -10,16 +10,23 @@ body {
   background-color: #e4e3e382
 }
 
-
 .legendtext {
     font-family: "Verdana";
     font-size: 14px;
     text-align: center;
 }
 
-#legendID {
 
-    fill: none;
+.legendBox {
+    stroke: 
+}
+.legendTitle {
+    text-align: center;
+     font-size: 24px;
+}
+#legend {
+    fill: white;
+    fill-opacity: 1.0;
 }
 .axis {
   font-family: "Verdana";
@@ -29,7 +36,7 @@ body {
 
 .ylabel {
     font-family: "Verdana";
-    font-size: 16px;
+    font-size: 24px;
 }
 
 .chart-title {
@@ -118,12 +125,8 @@ path.line {
 
 .captioning {
     font-family: "Verdana";
-    font-size:12px;
+    font-size:14px;
     fill: black;
-}
-
-#button-time {
-    background-color: gold;
 }
 
 .vis-container {
@@ -139,7 +142,9 @@ path.line {
     text-align: center;
 }
 
-#buttonContainer h4{
+#buttonInstructions h4{
         text-align:left;
         display:inline-block;
+        text-decoration: underline;
+        font-size: 24px;
 }

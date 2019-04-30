@@ -14,27 +14,25 @@
       <b>Federal Budget Projection Explorer</b>
   </h1>
         <h2 align="center">This dashboard shows historical federal budget
-        data as well as the Congressional Budget Office's (CBO)
+                    data as well as the Congressional Budget Office's (CBO)
         <br> projections for revenue collection, spending, and overall debt.
         <br>
         </h2>
-            <h3 align="center">Click the buttons on the righthand side of the
-                chart to toggle between the CBO's budgetary overview,
-                <br>their projections for revenue collection,
-                and spending projections.
-                <br>
-            </h3>
-
 </head>
+
+
+
 <body>
     <br>
-    <div id="buttonContainer">
-        <h4> Choose which CBO projection you want to
-            <br>see by pressing one of the following buttons:
+    <div id="buttonInstructions">
+        <h4>Choose which CBO projection you want to
+            see by pressing one of the following buttons:
         </h4>
-        <button id="overviewButton">Budgetary Outlook</button>
-    	<button id="spendButton">Spending Projections</button>
-        <button id="revenueButton">Revenue Projections</button>
+    </div>
+    <div id="buttonContainer">
+        <button class="button" value='Budgetary Outlook'>Long-Term<br>Budgetary Outlook</button>
+    	<button class="button" value='Spending Projections'>Spending<br>Projections</button>
+        <button class="button" value='Revenue Projections'>Revenue<br>Projections</button>
     </div>
     <br>
     <svg class="vis-container">
@@ -43,10 +41,11 @@
   <script src="bundle.js"></script>
   <br>
   <br>
-  <br>
       <p class='captioning'>
+          <h4>
       <a href="https://itlyons.github.io/USBudget_DataVisualization//">
           Visit the Github Home for this Project</a>
+          <br>
           <br>
           All projections and historic data comes from the Congressional Budget Office.
           <br>
@@ -58,6 +57,7 @@
           "Spending" and "Revenues" data sourced from CBO's
           <a href="https://www.cbo.gov/publication/54918">
               10-Year 2019-2029 Budget and Economic Outlook</a> document was used.
+          </h4>
       </p>
 </body>
 </html>

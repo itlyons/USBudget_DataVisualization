@@ -67,9 +67,9 @@ function Visify(allData, whatChart = 'Budgetary Outlook') {
     const height = width * 2/3;
 
     const margin = {left: 75,
-                right: 120,
+                right: 50,
                 top: 50,
-                bottom: 75
+                bottom: 50
                 };
 
     const plotWidth = width - margin.left - margin.right;
@@ -357,28 +357,40 @@ function Visify(allData, whatChart = 'Budgetary Outlook') {
 
 //****************** <LEGEND TIME> ******************
 //***************************************************
-    var legend = svg.append('g').attr('id', 'legendID')
-                    .append('rect')
+
+    var legend = svg.append('g').attr('class', 'legend')
               .attr('transform','translate(50,50)')
               .style('font-size','12px')
               .style('class', 'legendCanvas')
                 .attr('width', margin.right*.99)
                 .attr('height', plotHeight*.3);
+                var numBoxes = uniqCats.length
+
+    var legendContain = legend.append('g');
+
+    legendContain.append('rect').attr('id', 'legend')
+                .attr('width', 220+plotWidth *.01)
+                .attr('height', 20+numBoxes*50)
+                .attr('y', -50)
+                .attr('stroke', 'black')
+                .attr('fill', 'none');
 
     // Add the legend's colored boxes.
-    legend.selectAll('rect')
+    legend.append('g').selectAll('rect')
                 .data(uniqCats)
                 .enter()
                 .append('rect')
                   .attr('class', 'legendBox')
                   .attr('x', plotWidth *.01)
-                  .attr('y', function(d, i){ return i *  30;})
-                  .attr('width', 24)
-                  .attr('height', 24)
+                  .attr('y', function(d, i){ console.log(d,i);return i *  35;})
+                  .attr('width', 30)
+                  .attr('height', 30)
                   .style('fill', function(d) {
                      var boxColor = color(d);
                      return boxColor;
                  });
+
+
 
     // Add the labels to the legend positioned next to the boxes.
     legend.selectAll('text')
@@ -387,14 +399,22 @@ function Visify(allData, whatChart = 'Budgetary Outlook') {
         .append('text')
             .attr('class', 'legendtext')
             .style('text-anchor', 'left')
-            .attr('x', 30+ plotWidth*.01)
-            .attr('y', function(d, i){ return (i * 30)+16;})
+            .attr('x', 40+ plotWidth*.01)
+            .attr('y', function(d, i){ return (i * 35)+18;})
             .text(function(d){
                 var catLabel = d;
                 return [catLabel];
             })
-            .attr('fill', 'black')
+            .attr('stroke', 'black')
             .style('opacity', 1);
+
+    legendContain.append('text')
+            .attr('x', (220+plotWidth *.01)/4)
+            .attr('y', -20)
+            .attr('class','legendTitle')
+            .text('Legend');
+
+
 //****************** </LEGEND TIME> ******************
 //****************************************************
 
@@ -408,24 +428,13 @@ function Visify(allData, whatChart = 'Budgetary Outlook') {
 
 //****************** <BUTTON TIME> ******************
 //****************************************************
-    var buttons = svg.append('g')
-                    .attr('id', 'button-time');
-
-    buttons.append('rect')
-            .attr('transform', 'translate(' + (plotWidth+1) + ',' + (height*.13) + ')')
-            .attr('width', margin.right*.99)
-            .attr('height', plotHeight*.3)
-            .attr('fill', 'gold')
-            .style('stroke-width', 1)
-            .style('stroke', 'black');
-
     var selectors = [{'Label':'Spending Projections'},
                     {'Label':'Revenue Projections'},
                     {'Label':'Budgetary Outlook'}];
 
     // Set up functions for the buttons to run
-    var inputChange = function(d, inputValue) {
-        inputValue = d.Label
+    var inputChange = function(inputValue) {
+        //console.log(inputValue)
 
         if (inputValue === 'Spending Projections')
             {changeChart(inputValue);}
@@ -441,40 +450,20 @@ function Visify(allData, whatChart = 'Budgetary Outlook') {
     }
 
     // inputChange() calls changeChart()
-    function changeChart(d, inputValue) {
+    function changeChart(inputValue) {
         function removeStuff() {
-            // This isn't how I wanted to do this, but
-            svg.transition()
-                .remove();};
+            svg.remove();};
         removeStuff();
 
         Visify(allData, inputValue);
     }
 
-    buttons.selectAll('text')
-            .data(selectors).enter()
-            .append('text')
-                .text(d => d.Label)
-                .attr('class', 'button-text')
-                .style('text-anchor', 'left')
-                .attr('x', plotWidth*1.01)
-                .attr('y', function(d, i){ return ((height*.20)+i * 40);})
-                .attr('fill', 'black')
-                .style('opacity', 1)
-                .on('click', inputChange);
+    var overviewButton = d3.selectAll('button');
+    overviewButton.on('click', function(d,i){
 
-    buttons.append('text')
-        .attr('class', 'button-text-title')
-        .attr('x', plotWidth*1.02)
-        .attr('y', height*.16)
-        .style('font-weight', 'bold')
-        .style('fill', 'black')
-        .text('Show Me:');
+        inputChange(this.value);
 
-    var overviewButton = d3.select('#overviewButton');
-    //                        .on('click', inputChange('Budgetary Outlook'));
-        //d3.select('#revenueButton')
-        //    .on('click', inputChange('foo2', 'Revenue Projections'));
+    });
 
 
 }
