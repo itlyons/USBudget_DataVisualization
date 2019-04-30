@@ -1,4 +1,4 @@
-@-ms-viewport{
+'Raleway', sans-serif'Raleway', sans-serif'Raleway', sans-serif@-ms-viewport{
   width: device-width;
 }
 
@@ -11,12 +11,14 @@ body {
 }
 
 .legendtext {
-    font-family: "Verdana";
-    font-size: 14px;
+    font-family: 'Raleway', sans-serif;
+    font-size: 16px;
     text-align: center;
 }
 
-
+.legendBox {
+    stroke: black
+}
 .legendTitle {
     text-align: center;
      font-size: 24px;
@@ -26,28 +28,29 @@ body {
     fill-opacity: 1.0;
 }
 .axis {
-  font-family: "Verdana";
-  font-size: 12px;
+  font-family: 'Raleway', sans-serif;
+  font-size: 16px;
   shape-rendering: crispEdges;
   }
 
 .ylabel {
-    font-family: "Verdana";
+    font-family: 'Raleway', sans-serif;
     font-size: 24px;
 }
 
 .chart-title {
-    font-family: "Verdana";
+    font-family: 'Raleway', sans-serif;
 }
 
 .annotation {
-    font-family: "Verdana";
-    font-size:16px;
+    font-family: "Lucida Console";
+    font-size:20px;
 }
 
 #annoSpecial {
-    font-family: "Verdana";
-    font-size:14px;
+    font-family: "Lucida Console";
+    font-size:18px;
+    font-style: italic;
 }
 
 
@@ -136,7 +139,7 @@ path.line {
 }
 
 .captioning {
-    font-family: "Verdana";
+    font-family: "Lucida Console";
     font-size:14px;
     fill: black;
 }

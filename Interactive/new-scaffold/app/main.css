@@ -10,8 +10,11 @@ body {
 
 .legendtext {
   font-family: "Verdana";
-  font-size: 14px;
+  font-size: 16px;
   text-align: center; }
+
+.legendBox {
+  stroke: black; }
 
 .legendTitle {
   text-align: center;
@@ -23,7 +26,7 @@ body {
 
 .axis {
   font-family: "Verdana";
-  font-size: 12px;
+  font-size: 16px;
   shape-rendering: crispEdges; }
 
 .ylabel {
@@ -31,15 +34,16 @@ body {
   font-size: 24px; }
 
 .chart-title {
-  font-family: "Verdana"; }
+  font-family: 'Raleway', sans-serif; }
 
 .annotation {
-  font-family: "Verdana";
-  font-size: 16px; }
+  font-family: "Lucida Console";
+  font-size: 20px; }
 
 #annoSpecial {
-  font-family: "Verdana";
-  font-size: 14px; }
+  font-family: "Lucida Console";
+  font-size: 18px;
+  font-style: italic; }
 
 path.line {
   fill: none;
@@ -117,7 +121,7 @@ path.area {
   stroke-dasharray: 3,3; }
 
 .captioning {
-  font-family: "Verdana";
+  font-family: "Lucida Console";
   font-size: 14px;
   fill: black; }
 

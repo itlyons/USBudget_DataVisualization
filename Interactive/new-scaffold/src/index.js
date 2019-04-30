@@ -138,7 +138,7 @@ function Visify(allData, whatChart = '') {
 
     //          Create a line generator         //
     var line = d3.line()
-        .curve(d3.curveLinear)
+        .curve(d3.curveCardinal)
         .x(function(d) { return xScale(d.Year); })
         .y(function(d) { return yScale(d.pctgdp); });
 
@@ -204,14 +204,14 @@ function Visify(allData, whatChart = '') {
         if (whatChart === 'Spending Projections') {
             annos.append('text')
                 .attr('id', 'annoSpecial')
-                .attr('x', todayX+10)
+                .attr('x', todayX+15)
                 .attr('y', plotHeight*0.90)
                 .attr('text-anchor', 'left')
-                .text('Higher Interest Rates And Higher Deficits');
+                .text('Higher Interest Rates And Higher Deficits Are');
 
             annos.append('text')
                 .attr('id', 'annoSpecial')
-                .attr('x', todayX+10)
+                .attr('x', todayX+15)
                 .attr('y', plotHeight*0.92)
                 .attr('text-anchor', 'left')
                 .text('Projected To Nearly Double Interest Payments');
