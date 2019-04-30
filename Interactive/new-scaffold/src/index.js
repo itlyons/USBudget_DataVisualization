@@ -21,7 +21,7 @@ domReady(() => {
     });
 
 
-function Visify(allData, whatChart = 'Budgetary Outlook') {
+function Visify(allData, whatChart = '') {
     var [overviewData, spendData, revData] = allData;
 
     // Create a function that returns the data we want
@@ -74,12 +74,7 @@ function Visify(allData, whatChart = 'Budgetary Outlook') {
 
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.bottom - margin.top;
-    /*
-    const background = d3.select('background-curtain').style("height", "100%")
-                            .append('div')
-                            .attr('class', 'background')
-                            .append('.vis-container');
-                            */
+
     const svg = select('.vis-container')
                     .attr('width', width)
                     .attr('height', height)
@@ -389,7 +384,6 @@ function Visify(allData, whatChart = 'Budgetary Outlook') {
                      var boxColor = color(d);
                      return boxColor;
                  });
-
 
 
     // Add the labels to the legend positioned next to the boxes.
