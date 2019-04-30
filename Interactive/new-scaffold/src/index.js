@@ -21,20 +21,20 @@ domReady(() => {
     });
 
 
-function Visify(allData, whatChart = 'Overview') {
+function Visify(allData, whatChart = 'Budgetary Outlook') {
     var [overviewData, spendData, revData] = allData;
 
     // Create a function that returns the data we want
     // whatChart is set when the user clicks one of the button options
     var chooseData = function indexizer(overviewData, spendData, revData, whatChart) {
-        if (whatChart === 'CBO Spending')
+        if (whatChart === 'Spending Projections')
             {var lineData = [(spendData.filter(d => d.Category==='Discretionary')),
                             (spendData.filter(d => d.Category==='Mandatory')),
                             (spendData.filter(d => d.Category==='Net Interest'))
                             ];
             return [spendData, lineData]}
 
-        if (whatChart === 'CBO Revenues')
+        if (whatChart === 'Revenue Projections')
             {var lineData = [(revData.filter(d => d.Category==='Individual Income Taxes')),
                             (revData.filter(d => d.Category==='Corporate Income Taxes')),
                             (revData.filter(d => d.Category==='Payroll Taxes')),
@@ -61,8 +61,10 @@ function Visify(allData, whatChart = 'Overview') {
 
     //******************** SVG & SCALE SETUP ********************//
     //********************                   ********************//
-    const width = 1200;
-    const height = 2/3 * width;
+    //const width = 1200;
+    //const height = 2/3 * width;
+    const width = screen.width *.8;
+    const height = width * 2/3;
 
     const margin = {left: 75,
                 right: 120,
@@ -201,10 +203,10 @@ function Visify(allData, whatChart = 'Overview') {
     var annos = svg.append('g').attr('class', 'random-text');
 
     function writeText(whatChart, annos) {
-        if (whatChart === 'CBO Revenues') {
+        if (whatChart === 'Revenue Projections') {
         ;}
 
-        if (whatChart === 'CBO Spending') {
+        if (whatChart === 'Spending Projections') {
             annos.append('text')
                 .attr('id', 'annoSpecial')
                 .attr('x', todayX+10)
@@ -220,7 +222,7 @@ function Visify(allData, whatChart = 'Overview') {
                 .text('Projected To Nearly Double Interest Payments');
         ;}
 
-        if (whatChart === 'Overview') {
+        if (whatChart === 'Budgetary Outlook') {
             annos.append('text')
                 .attr('id', 'annoSpecial')
                 .attr('x', plotWidth*.65)
@@ -272,9 +274,9 @@ function Visify(allData, whatChart = 'Overview') {
 
 
     const title = {
-        'Overview':'Revenues Stagnate, and Debt Grows',
-        'CBO Revenues':'Revenues Are Projected to Stagnate, Except Personal Income Taxes',
-        'CBO Spending':'Mandatory Spending Squeezes Discretionary Spending'
+        'Budgetary Outlook':'Revenues Stagnate, and Debt Grows',
+        'Revenue Projections':'Revenues Are Projected to Stagnate, Except Personal Income Taxes',
+        'Spending Projections':'Mandatory Spending Squeezes Discretionary Spending'
 
     }
 
@@ -417,29 +419,29 @@ function Visify(allData, whatChart = 'Overview') {
             .style('stroke-width', 1)
             .style('stroke', 'black');
 
-    var selectors = [{'Label':'CBO Spending'},
-            {'Label':'CBO Revenues'},
-            {'Label':'Overview'}];
+    var selectors = [{'Label':'Spending Projections'},
+                    {'Label':'Revenue Projections'},
+                    {'Label':'Budgetary Outlook'}];
 
     // Set up functions for the buttons to run
-    function inputChange (d) {
-        var inputValue = d.Label;
+    var inputChange = function(d, inputValue) {
+        inputValue = d.Label
 
-        if (inputValue === 'CBO Spending')
-            {changeChart(d, inputValue);}
+        if (inputValue === 'Spending Projections')
+            {changeChart(inputValue);}
 
-        else if (inputValue === 'CBO Revenues')
-            {changeChart(d, inputValue);}
+        else if (inputValue === 'Revenue Projections')
+            {changeChart(inputValue);}
 
         else if (inputValue === 'CBO Debt')
-            {changeChart(d, inputValue);}
+            {changeChart(inputValue);}
 
-        else if (inputValue === 'Overview')
-            {changeChart(d, inputValue);};
+        else if (inputValue === 'Budgetary Outlook')
+            {changeChart(inputValue);};
     }
 
     // inputChange() calls changeChart()
-    function changeChart (d, inputValue) {
+    function changeChart(d, inputValue) {
         function removeStuff() {
             // This isn't how I wanted to do this, but
             svg.transition()
@@ -462,12 +464,17 @@ function Visify(allData, whatChart = 'Overview') {
                 .on('click', inputChange);
 
     buttons.append('text')
-        .attr('class', 'button-text')
+        .attr('class', 'button-text-title')
         .attr('x', plotWidth*1.02)
-        .attr('y', height*.160)
+        .attr('y', height*.16)
         .style('font-weight', 'bold')
         .style('fill', 'black')
         .text('Show Me:');
 
-        d3.select('#button').on('click', inputChange)
+    var overviewButton = d3.select('#overviewButton');
+    //                        .on('click', inputChange('Budgetary Outlook'));
+        //d3.select('#revenueButton')
+        //    .on('click', inputChange('foo2', 'Revenue Projections'));
+
+
 }

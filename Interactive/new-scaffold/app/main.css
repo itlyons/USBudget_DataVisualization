@@ -114,4 +114,5 @@ path.area {
   text-align: center; }
 
 #buttonContainer h4 {
-  text-align: left; }
+  text-align: left;
+  display: inline-block; }
